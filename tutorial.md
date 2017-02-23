@@ -18,10 +18,14 @@ It gives a string foundation to handle events and values that change over time.
 Reflex-Dom is built on Reflex and on GHCJS.Dom. It allows you to write GUI programs that run in a 
 Web Browser or as a 'native' application in Webkit. Reflex-Dom was written by Ryan Trinkle too.
 
+It's not necessary to be a Haskell guru to write GUI programs with reflex-dom. 
+A basic understanding of Haskell and the concepts of *Functor*, *Applicative* and *Monad* is enough. 
+Of course, the more experience you have, the easier it is.
+
 
 # Basics of Functional Reactive Programming (FRP) and Reflex
 
-## Basic Idea of Functional Reactive Programming
+## The Basic Ideas of Functional Reactive Programming
 
 Normally input functions are impure. Assume a function *getChar* that reads a single character from the keyboard.
 For different invocations the function *getChar*  normally returns a different character, depending on which key on the keyboad was presse.
@@ -56,18 +60,16 @@ Reflex uses 3 main time dependent data types:
 
 A typical type declaration for a function could be:
 
-~~~ { .haskell }
-dispEvent :: MonadWidget t m => T.Text  -> Event t ClickInfo -> m ()
-~~~
+```dispEvent :: MonadWidget t m => T.Text  -> Event t ClickInfo -> m ()```
+
 
 Here the *t* is the time parameter. This parameter is always introduced with a precondition. In our case
 ```  MonadWidget t m => ```. The *m* is normally some monad. *ClickInfo* would be a user defined Haskell data type.
 
 To call the above function, in some monadic context, you would write:
 
-~~~ { .haskell }
-   dispEvent "This is my event" evClick
-~~~ 
+```dispEvent "This is my event" evClick```
+
 
 Events and Behaviors are common data types in different FRP implementaions. Dynamics, however, are probabaly unique
 in Reflex.
@@ -86,11 +88,10 @@ the given type. This is shown in the following diagram:
 
 In Reflex the data type *Event* has the following simplified type:
 
-~~~ { .haskell }
-data Event t a
-~~~ 
+```data Event t a```
 
-'*a*' is the type of the event. I also call '*a*' the payload of the event.  It can be more or less every Haskell data type. It can even be a function.
+
+'*a*' is the type of the event. I also call the value '*a*' the payload of the event.  It can be more or less every Haskell data type. It can even be a function.
 
 Events are the main work horses withing Reflex. As we will see, it is very common to use functions to transform an Event of type *a*
 into an event of type *b*. 
@@ -98,9 +99,7 @@ into an event of type *b*.
 The data type *Event* is an instance of the Haskell Functor type class. 
 This allows event transformation with the well known *fmap* function:
 
-~~~ { .haskell }
-fmap :: (a ->  b) ->  Event a -> Event b
-~~~ 
+```fmap :: (a ->  b) ->  Event a -> Event b```
 
 Later we will see other functions to transform events:
 
@@ -112,9 +111,7 @@ It is not possible to be notified when a Behavior changes.
 
 In Reflex the data type *Behavior* has the following simplified type:
 
-~~~ { .haskell }
-data Behavior t a
-~~~
+```data Behavior t a```
 
 
 Behaviors can change their values only at time points where Events occur. This is shown in the following diagram.
@@ -128,9 +125,8 @@ To write a Reflex-dom application we rarely use Behaviors. If we need values tha
 A *Dynamic* is container for a value that can change over time and allows notifications on changes. 
 Dynamics are special to Reflex. They are a combination of the types *Behavior* and *Event*.
 
-~~~ { .haskell }
-data Dynamic t a
-~~~
+```data Dynamic t a```
+
 
 ![Behavior](https://github.com/hansroland/reflex-dom-inbits/raw/master/images//dynamic.png "Behavior")
 
@@ -139,21 +135,52 @@ When working with Dynamics it is very common to use applicative syntax .
 
 # Before we really start ...
 
+## Used Versions
+
+At the moment on Hackage you can find reflex version 0.4 and reflex-dom version 0.3. 
+However there are newer and better versions on Github: [reflex-0.5](https://github.com/reflex-frp/reflex) and 
+[reflex-dom.0.4](https://github.com/reflex-frp/reflex-dom)
+
+The main improvements of the Github versions are:
+
+* Use the *text* library with the data type *Text* instead of *String*. This gives performance.
+* Data type *Event* is now a Functor. 
+* Data type *Dynamic* is a Monad.
+
+The last 2 changes make the programs simpler!
+ 
+
 ## Popular Language Extensions
 
-To write Reflex programs, very often we use some of the following GHC Haskell language Extensions
+To write Reflex programs, very often we use some of the following GHC Haskell language extensions
+
+```{-# LANGUAGE OverloadedStrings #-}```
+
+We need it, because *Reflex* uses *Text* instead of *String*. With the extension *OverloadedStrings* string constants like "I'm a String" get
+automatically converted to the correct string type. We don't need to pack and unpack the strings ourself.
+
+```{-# LANGUAGE RecursiveDo #-}```
+
+Sometimes we need to access a value or an event from a DOM element before it is defined. The magic behind
+*RecursiveDo* allows us to do this.
+
+```{-# LANGUAGE ScopedTypeVariables #-}```
+
+
+Sometimes the compiler is unable to infer the type of a bound variable in a do-block. 
+Or sometimes we want to document the type of such a variable, So we make our programs easier to understand.
+The extension *ScopedTypeVariables* makes this possible.
+
+In the following example we specify the type of the value *name*.
 
 ~~~ { .haskell }
-{-# LANGUAGE OverloadedStrings #}
-~~~ 
-
-~~~ { .haskell }
-{-# LANGUAGE RecursiveDo #}
-~~~ 
-
-~~~ { .haskell }
-{-# LANGUAGE ScopedTypeVariables #}
-~~~ 
+{-# LANGUAGE ScopedTypeVariables #-}
+main :: IO ()
+main = do
+    putStrLn "What's your name"
+    name :: String <- getLine
+    putStrLn $ "Hello " ++ name
+~~~
 
 ## Popular Imports
 
@@ -164,18 +191,27 @@ From all the 1001 libraries stored on Hackage, we will use only very few:
 Ok the tutorial is about Reflex.Dom so we should import it. 
 It's not necessary to import Reflex. Reflex.Dom reexports all the needed functions of Reflex.
 
-```import qualified Data.Text as Text```
+```import qualified Data.Text as T```
 
-Instead of the data type *String* reflex-dom uses the type *Text*. Text strings perform better than String strings.
+As mentioned above, reflex-dom uses the data type *Text* instead of the type *String*. 
+So we have to import it!
 
+```import qualified Data.Map as Map```
+
+Haskell Maps are very popular in *Reflex-dom*. They are used in a lot functions.
+
+```import Data.Monoid``` 
+
+We normally use the function *mempty* to create an empty Map, 
+or the function *mappend* rsp *(<>)* to combine two Maps.
 
 
 ## Some comments to the code examples
 
-A lot of these examples could be written with less lines, just by using the monadic fucntions (>>=),
+A lot of these examples could be written with less lines, just by using the monadic functions (>>=),
 (>>), (=<<), (<<) etc.
 
-Sometimes I used more lines in my code in order to have code that is not so terse, This code should be simpler to understand for beginners.
+Sometimes I used more lines in my code in order to have code that is easier to understand by beginners.
 
 # A First Simple Reflex-Dom Example
 
@@ -189,7 +225,7 @@ main :: IO ()
 main = mainWidget $ display =<< count =<< button "ClickMe"
 ~~~
 
-This example uses 4 reflex or reflex-dom functions:
+This example uses four reflex or reflex-dom functions:
 
 * mainWidget
 * display
@@ -200,9 +236,7 @@ Let's look at the types of these functions and what they do:
 
 ## Function: *mainWidget*
 
-~~~ { .haskell }
-mainWidget :: (forall x. Widget x ()) -> IO ()
-~~~ 
+```mainWidget :: (forall x. Widget x ()) -> IO ()```
 
 It sets up the reflex-dom environment. It takes an argument of type *Widget* and returns *IO ()*
 
@@ -224,9 +258,8 @@ We will see them later.
 
 ## Function: *display*
 
-~~~ { .haskell }
-display :: (Show a, ... ) => Dynamic t a -> m ()
-~~~ 
+
+```display :: (Show a, ... ) => Dynamic t a -> m ()```
 
 The function takes an argument of type *Dynamic t a* and returns unit in the current monad.
 It uses the Show instance of the datatype *a* to build a string representation of its first parameter.
@@ -239,18 +272,14 @@ Thefore I don't show them here and in the examples to follow..
 
 ## Function: *count*
 
-~~~ { .haskell }
-count :: (Num b, ...) =>  Event t a -> m (Dynamic t b)
-~~~normally
+```count :: (Num b, ...) =>  Event t a -> m (Dynamic t b)```
 
 The *count* function takes an event as argument and creates a Dynamic.
 In this Dynamic the function count's up the number of times the event occured or fired.
 
 ## Function: *button*
 
-~~~ { .haskell }
-button :: (...) => Text -> m (Event t ())
-~~~
+```button :: (...) => Text -> m (Event t ())```
 
 The *button* function takes a text as argument. It creates a DOM button element with the text, and returns
 an event with *()* as payload.
@@ -259,8 +288,7 @@ Now it's easy to understand the whole line *mainWidget $ display =<< count =<< b
 
 * Clicking on the button creates or triggers events, 
 * The function *count* creates a dynamic value with the total number of these events.
-* The function *display* creates a DOM element with a string representation of this number and displays it as DOM element
- normally
+* The function *display* creates a DOM element with a string representation of this number and displays it as DOM element.
 
 **Try it!**
 
@@ -274,45 +302,40 @@ Reflex has 2 other very frequently used helper functions to create DOM elements:
 
 ## Function: *text*
 
-~~~ { .haskell }
-text :: (...) => Text -> m ()
-~~~
+```text :: (...) => Text -> m ()```
 
 It is very simple: It just displays the text in the DOM. During program execution the text displayed in the DOM never changes. 
 The text is not of type *Dynamic t Text* but only of *Text*, hence it is static!!
 
 ## Function: *dynText* 
 
-~~~ { .haskell }
-dynText :: (...) => Dynamic t Text -> m ()
-~~~
+```dynText :: (...) => Dynamic t Text -> m ()```
 
 The function *dynText* does more or less the same as the function *text*. 
 However, the function argument is of type *Dynamic t Text*, so now the text may change during the execution of the program!!
 We will see some examples later.
 
 
-## Function family el, elAttr, elClass, elDynAttr, elDynClass
+## The Function family *el*, *elAttr*, *elClass*, *elDynAttr*, *elDynClass*
 
 Reflex-dom has 2 function families to create all the different kinds of DOM elements:
 
 * el, elAttr, elClass, elDynAttr, elDynClass
 * el', elAttr', elClass', elDynAttr', elDynClass'
 
-First we will only look at the first family without the primes ' in the name:
+First we will look at the family without the primes ' in the name. 
+The second function family with the primes in the name we will cover in a later section.
 
 ## Function: *el*
 
 This function has the type signature:
 
-~~~ { .haskell }
-el :: (...) => Text -> m a -> m a
-~~~ 
+```el :: (...) => Text -> m a -> m a```
 
 It takes the type of the DOM element as a first argument. The second argument is either the text of the element
 or a child element.
 
-The file *src/dom01.hs* contains a typical first example:
+The file *src/dom01.hs* contains a typical first example and shows basic usage of the function *el*:
 
 ~~~ { .haskell }
 {-# LANGUAGE OverloadedStrings #-}
@@ -356,25 +379,20 @@ main = mainWidget $ do
 
 If you use HTML elements without any values or without a child, you simply write:
 
-~~~ { .haskell }
-    el "br" $ return () 
-~~~
+```el "br" $ return ()``` 
 
-*Try it!!*
+
+**Try it!!**
 
 ## Function: *elAttr*
 
 With the function *el*, we can't create a DOM element with attributes, eg a link:
 
-~~~ { .html }
-<a target="_blank" href="http://google.com">Google!</a>
-~~~ 
+```<a target="_blank" href="http://google.com">Google!</a>```
 
-To add attributes, reflex-dom has a function *elAttr*. It has the type:
+To add attributes, reflexse functions all have -dom has a function *elAttr*. It has the type:
 
-~~~ { .haskell }
-elAttr :: (...) => Text -> Map Text Text -> m a -> m a
-~~~
+```elAttr :: (...) => Text -> Map Text Text -> m a -> m a```
 
 The function *elAttr* is similar to the function *el*, but it takes an additional 
 parameter of type *Map Text Text*. This parameter contains the attributes of the DOM element.
@@ -384,13 +402,12 @@ are the values.
 
 The library Data.Map defines a little helper function (=:) to create a singelton Map.
 
-~~~ { .haskell }
-(=:) :: k -> a -> Map k a
-~~~
+
+```(=:) :: k -> a -> Map k a```
 
 The singleton Maps are then appended / merged with the (<>) operator from Monoids.
 
-The file src/dom03.hs contains the example:
+The file *src/dom03.hs* contains an example for *elAttr*:
 
 ~~~ { .haskell }
 {-# LANGUAGE OverloadedStrings #-}
@@ -410,27 +427,23 @@ attrs = ("target" =: "_blank") <> ("href" =: "http://google.com")
 
 ## Function: *elClass*
 
-The function *elClass* allows to specify the name of a class to be used by the Cascaded Style Sheets (CSS).
+The function *elClass* allows you to specify the name of a class to be used by the Cascaded Style Sheets (CSS).
 
 It has the following type:
 
-~~~ { .haskell }
-elClass :: (...) => T.Text -> T.Text -> m a -> m a
-~~~
+```elClass :: (...) => T.Text -> T.Text -> m a -> m a```
 
 The first parameter is again the type of the DOM element. The second is the name of the CSS class.
 
 A small example:
 
-~~~ { .haskell }
-elClass "h1" "mainTitle" $ text "This is the main title"
-~~~
+```elClass "h1" "mainTitle" $ text "This is the main title"```
+
 
 In HTML:
 
-~~~ { .html }
-<h1 class="mainTitle">This is the main title</h1>
-~~~
+```<h1 class="mainTitle">This is the main title</h1>```
+
 
 ## Function: *elDynAttr*
 
@@ -440,9 +453,7 @@ But you cannot change them while the program is running!
 With the function *elDynAttr*, as the name says, you can specify attributes, 
 that change during program execution. It has the following type:
 
-~~~ { .haskell }
-elDynAttr  :: (...) => Text -> Dynamic t (Map Text Text) -> m a -> m a
-~~~
+```elDynAttr  :: (...) => Text -> Dynamic t (Map Text Text) -> m a -> m a```
 
 You guessed it, the first parameter is again the type, and the second is a map with **any** attribute,
 you can use for your DOM element. However, this time this map is wrapped in a Dynamic.
@@ -450,12 +461,10 @@ you can use for your DOM element. However, this time this map is wrapped in a Dy
 To use the function *elDynAttr* we must somehow create a Dynamic. 
 Reflex has several functions to create Dynamic values. As a first example, we will use the function *toggle*:
 
-~~~ { .haskell }
-toggle :: (...) => Bool -> Event t a -> m (Dynamic t Bool)
-~~~
+```toggle :: (...) => Bool -> Event t a -> m (Dynamic t Bool)```
 
 The function toogle create a new Dynamic using the first parameter as the initial value
-and flips this value every time the Event in the second parameter occurs.
+and flips this boolean value every time the event in the second parameter occurs.
 
 The file *src/dom04.hs* contains an example for the function *elDynAttr*:
 
@@ -498,25 +507,99 @@ It decides on the boolean parameter about the color of the DOM element.
 The function *elDynClass* is similar to *elClass* but here the type of the parameter to specify the name of the CSS class is Dynamic.
 This allows you to change the CSS-class of the element dynamically during runtime.
 
-The function has the following type:
+The function has the type:
 
-~~~ { .haskell }
-elDynClass :: (...) => Text -> Dynamic t Text -> m a -> m a
-~~~
+```elDynClass :: (...) => Text -> Dynamic t Text -> m a -> m a```
+
 
 # Basic Event Handling
 
+In this section we will have a first look on how to use events. 
+
+## Function *foldDyn*
+
+Remember the first example *src/dom01.hs" with the counter. There we used the predefined function *count*.
+We will now do the same example, but handle the event ourselfs with the *foldDyn* function.
+
+The function *foldDyn* has the type   
+
+```foldDyn :: (...) => (a -> b -> b) -> b -> Event t a -> m (Dynamic t b)```
+
+It works similar to the wellknown *foldr* function from the list data type. 
+It first creates a Dynamic with the value specified in the second parameter.
+Every time an event (third parameter) occurs, 
+it uses the function in the first parameter and folds up the values of the event.
+ 
+File *src/event01.hs* contains an example for *foldDyn*
+
+~~~ { .haskell .numberLines}
+{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+
+main :: IO () 
+main = mainWidget bodyElement
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+  rec el "h2" $ text "Counter as a fold"
+      numbs <- foldDyn (+) (0 :: Int)  (1 <$ evIncr)
+      el "div" $ display numbs
+      evIncr <- button "Increment"
+  return ()
+~~~
+
+Look at the line ```numbs <- foldDyn (+) (0 :: Int)  (1 <$ evIncr)```:
+
+* We use the normal addition as a fold function.
+* We have to specify the type of initial value. The compiler does not know whether we want to count *Int* or *Integer* or even *Float*.
+* evIncr has the type ```Event t ()```. We cannot use () as an argument for the (+) fold function. Therfore we use
+applicative syntax to replace *()* by the number *1*. 1 we can use together with our fold function (+)!
+* This is the first example that uses *event tranformation* 
+
+Please note, that the implemention of *count* in reflex-dom differs from the example above.
+
+## Function *leftmost*
+
+Now we want to have a second button to decrement our counter. 
+To combine the events of the 2 buttons we use the function *leftmost*:
+
+```leftmost :: Reflex t => [Event t a] -> Event t a```
+
+If an event in the array of the first parameter occurs, the function *leftmost* returns this event. 
+If two ore more events in the array occur simultaneously, 
+the function *leftmost* returns the leftmost of all the simultaneously occuring events.
+
+File *src/event02.hs* contains the example:
+
+~~~ { .haskell .numberLines}
+{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+  rec el "h2" $ text "Combining Events with leftmost"
+      counts <- foldDyn (+) (0 :: Int) $ leftmost [1 <$ evIncr, -1 <$ evDecr]
+      el "div" $ display counts
+      evIncr <- button "Increment"
+      evDecr <- button "Decrement"
+  return ()
+~~~
+
+#Function **
 
 
-# Input Widgets
+# Predefined Input Widgets
 
-## Function button - Do it yourself!
+In this section, we look at the standard DOM input elements. They are predefined in reflex-dom and easy to use.
 
-*button* is a simple helper function to create a button in the DOM. It returns an event
-with unit *()* in the payload.
-Unfortunately, this function is not very flexible: We can only specify the label of the button and nothing more.
-If we want to add a CSS class or directly some attributes we have to define the button with on of the *el* functions:
+## Buttons
 
+We have already used a lot of buttons. They 
 
 ## Text Input Fields
 
@@ -652,5 +735,19 @@ or into the text *Click me*
 ~~~ { .haskell }
 
 ~~~
+
+# The Function family *el'*, *elAttr'*, *elClass'*, *elDynAttr'*, *elDynClass'* 
+
+In this section of the tutorial, we will look at the second function family to create DOM elements.
+The names of these functions all end with a prime (').
+
+
+## Function *button* - Do it yourself!
+
+*button* is a simple helper function to create a button in the DOM. It returns an event
+with unit *()* in the payload.
+Unfortunately, this function is not very flexible: We can only specify the label of the button and nothing more.
+If we want to add a CSS class or directly some attributes we have to define the button with on of the *el* functions:
+
 
 ### Communication with a Web Server
