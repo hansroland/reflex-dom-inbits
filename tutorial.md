@@ -1,25 +1,25 @@
 # A Tutorial about Reflex-Dom
 
 Today most computer programs have a graphical user interface (GUI). 
-However Haskell programs with a GUI are still rare. Haskell programs normally use a command line interface. 
+However Haskell programs with a GUI are still rare. Haskell programs normally use a command line interface (CLI). 
 For a long time, there were no good options to write GUI programs in Haskell. 
-The event driven nature of a GUI's is difficult to map onto the functional paradigm. 
+It is difficult to mat the event driven nature of a GUI program onto the functional paradigm. 
 The traditional object oriented way to program a GUI application uses callbacks. 
-These callbacks need a lot of state and managing state is not easy in Haskell.
+These callbacks need a lot of global state and managing state is not easy in Haskell.
 
 To solve these problems the Haskell community developed a lot of new new ideas. 
-One of the solutions is Functional Reactive Programming, *FRP* for short. 
-Conal Elliott and Paul Hudak first developed the basic idea and published 2007 the paper [Functional Reactive Animation](http://conal.net/papers/icfp97/)
-On Hackage you can find a lot
-of different FRP libraries, eg *grapefruit-frp*, *reactive-banana*, *elera*, *frpnow*, *netwire*, *reflex* and many more.
+One of the solutions is called *Functional Reactive Programming*, *FRP* for short. 
+Conal Elliott and Paul Hudak first developed the basic ideas and published 2007 the paper [Functional Reactive Animation](http://conal.net/papers/icfp97/)
+On Hackage there a lot
+of different FRP libraries, eg *elera*, *frpnow*, *grapefruit-frp*, *netwire*, *reactive-banana*, *reflex* and many more.
 
 In this tuorial we use Reflex and Reflex-Dom. Reflex is a FRP implemetation written by Ryan Trinke.
-It gives a string foundation to handle events and values that change over time. 
+Reflex is a strong foundation to handle events and values that change over time. 
 Reflex-Dom is built on Reflex and on GHCJS.Dom. It allows you to write GUI programs that run in a 
 Web Browser or as a 'native' application in Webkit. Reflex-Dom was written by Ryan Trinkle too.
 
 It's not necessary to be a Haskell guru to write GUI programs with reflex-dom. 
-A basic understanding of Haskell and the concepts of *Functor*, *Applicative* and *Monad* is enough. 
+A good understanding of basic Haskell and the concepts of *Functor*, *Applicative* and *Monad* is enough. 
 Of course, the more experience you have, the easier it is.
 
 
@@ -28,7 +28,7 @@ Of course, the more experience you have, the easier it is.
 ## The Basic Ideas of Functional Reactive Programming
 
 Normally input functions are impure. Assume a function *getChar* that reads a single character from the keyboard.
-For different invocations the function *getChar*  normally returns a different character, depending on which key on the keyboad was presse.
+For different invocations the function *getChar*  normally returns a different character, depending on the key that was pressed on the keyboad .
 Therefore such a function is not a pure Haskell function. As everybody knows Haskell uses monadic IO actions to avoid unpure functions.
 
 Functional Reactive Programming takes an other approach. All potentially impure functions have a time parameter
@@ -52,11 +52,11 @@ In Reflex the time parameter is always shown explicit in the type declaration of
 Normally a type parameter with the name *t* is used.
 However it's never necessary to supply this parameter as a programmer when you call the function.
 
-Reflex uses 3 main time dependent data types:
+Reflex uses 3 main time-dependent data types:
 
-* Events
-* Behaviors
-* Dynamics
+* Event
+* Behavior
+* Dynamic
 
 A typical type declaration for a function could be:
 
@@ -71,13 +71,13 @@ To call the above function, in some monadic context, you would write:
 ```dispEvent "This is my event" evClick```
 
 
-Events and Behaviors are common data types in different FRP implementaions. Dynamics, however, are probabaly unique
+Events and Behaviors are common data types in different FRP implementations. Dynamics, however, are probably unique
 in Reflex.
 
 ## Event
 
-Events occure at some points in time and they carry a value. 
-The most prominent example for events are mouse clicks or pressing keys on a keyboard. 
+Events occur at some points in time and they carry a value. 
+The most prominent example for events are mouse clicks and pressing keys on a keyboard. 
 The value of a keyboard event is normally the code of the pressed key.
 
 During any given time frame, an *Event* is either occurring or not occurring; if it is occurring, it will contain a value of
@@ -90,23 +90,23 @@ In Reflex the data type *Event* has the following simplified type:
 
 ```data Event t a```
 
+'*a*' is the type of the event. I also call the value '*a*' the payload of the event. It can be more or less every Haskell data type. 
+Sometimes we will use functions.
 
-'*a*' is the type of the event. I also call the value '*a*' the payload of the event.  It can be more or less every Haskell data type. It can even be a function.
-
-Events are the main work horses withing Reflex. As we will see, it is very common to use functions to transform an Event of type *a*
+Events are the main work horses in Reflex. As we will see, it is very common to transform an event of type *a*
 into an event of type *b*. 
 
 The data type *Event* is an instance of the Haskell Functor type class. 
 This allows event transformation with the well known *fmap* function:
 
-```fmap :: (a ->  b) ->  Event a -> Event b```
+```fmap :: (a -> b) -> Event a -> Event b```
 
-Later we will see other functions to transform events:
+Later we will see other functions to transform events.
 
 
 ## Behavior
 
-A Behaviors is a container for a value, that can change over time. Other than events, they always have a value. 
+A *Behavior* is a container for a value, that changes over time. Other than events, Behaviors always have a value. 
 It is not possible to be notified when a Behavior changes.
 
 In Reflex the data type *Behavior* has the following simplified type:
@@ -114,15 +114,15 @@ In Reflex the data type *Behavior* has the following simplified type:
 ```data Behavior t a```
 
 
-Behaviors can change their values only at time points where Events occur. This is shown in the following diagram.
+Behaviors can change their values only at time points where events occur. This is shown in the following diagram.
 
 ![Behavior](https://github.com/hansroland/reflex-dom-inbits/raw/master/images//behavior.png "Behavior")
 
-To write a Reflex-dom application we rarely use Behaviors. If we need values that change over time, we use Dynamics. 
+To write a Reflex-dom application we rarely use Behaviors. We use *Dynamics* if we need values that change over time. 
 
 ## Dynamic
 
-A *Dynamic* is container for a value that can change over time and allows notifications on changes. 
+A *Dynamic* is a container for a value that can change over time and allows notifications on changes. 
 Dynamics are special to Reflex. They are a combination of the types *Behavior* and *Event*.
 
 ```data Dynamic t a```
@@ -131,14 +131,14 @@ Dynamics are special to Reflex. They are a combination of the types *Behavior* a
 ![Behavior](https://github.com/hansroland/reflex-dom-inbits/raw/master/images//dynamic.png "Behavior")
 
 A Dynamic is a monad and therefore an Applicative too. 
-When working with Dynamics it is very common to use applicative syntax .
+When working with Dynamics it is very common to use applicative syntax.
 
-# Before we really start ...
+# Before we really start coding...
 
-## Used Versions
+## Used Library Versions
 
-At the moment on Hackage you can find reflex version 0.4 and reflex-dom version 0.3. 
-However there are newer and better versions on Github: [reflex-0.5](https://github.com/reflex-frp/reflex) and 
+Today Hackage has reflex version 0.4 and reflex-dom version 0.3. 
+However for both libraries there are newer and better versions on Github: [reflex-0.5](https://github.com/reflex-frp/reflex) and 
 [reflex-dom.0.4](https://github.com/reflex-frp/reflex-dom)
 
 The main improvements of the Github versions are:
@@ -148,6 +148,8 @@ The main improvements of the Github versions are:
 * Data type *Dynamic* is a Monad.
 
 The last 2 changes make the programs simpler!
+
+In this tutorial, we will use the library versions from Github.
  
 
 ## Popular Language Extensions
@@ -156,20 +158,19 @@ To write Reflex programs, very often we use some of the following GHC Haskell la
 
 ```{-# LANGUAGE OverloadedStrings #-}```
 
-We need it, because *Reflex* uses *Text* instead of *String*. With the extension *OverloadedStrings* string constants like "I'm a String" get
-automatically converted to the correct string type. We don't need to pack and unpack the strings ourself.
+We need it, because *Reflex* uses *Text* instead of *String*. The extension *OverloadedStrings*  allows automatic conversion of string constants like "I'm a String"
+to the correct string type. We don't need to pack and unpack the string constants ourselfs.
 
 ```{-# LANGUAGE RecursiveDo #-}```
 
 Sometimes we need to access a value or an event from a DOM element before it is defined. The magic behind
-*RecursiveDo* allows us to do this.
+*RecursiveDo* makes this possible.
 
 ```{-# LANGUAGE ScopedTypeVariables #-}```
 
-
 Sometimes the compiler is unable to infer the type of a bound variable in a do-block. 
-Or sometimes we want to document the type of such a variable, So we make our programs easier to understand.
-The extension *ScopedTypeVariables* makes this possible.
+Or sometimes we want to document the type of such a variable. This makes it easier to understand.
+With the extension *ScopedTypeVariables* GHC accepts such type annotations.
 
 In the following example we specify the type of the value *name*.
 
@@ -198,7 +199,7 @@ So we have to import it!
 
 ```import qualified Data.Map as Map```
 
-Haskell Maps are very popular in *Reflex-dom*. They are used in a lot functions.
+Haskell Maps are very popular in *Reflex-dom*. They are used in a lot of functions.
 
 ```import Data.Monoid``` 
 
@@ -215,7 +216,7 @@ Sometimes I used more lines in my code in order to have code that is easier to u
 
 # A First Simple Reflex-Dom Example
 
-Let's begin with a first simple reflex example. This code is in the file src/count01.hs
+Let's begin with a first simple reflex-dom example. This code is in the file *src/count01.hs*:
 
 ~~~ { .haskell }
 {-# LANGUAGE OverloadedStrings #-}
@@ -238,7 +239,7 @@ Let's look at the types of these functions and what they do:
 
 ```mainWidget :: (forall x. Widget x ()) -> IO ()```
 
-It sets up the reflex-dom environment. It takes an argument of type *Widget* and returns *IO ()*
+It sets up the reflex-dom environment. It takes an argument of type ```Widget``` and returns ```IO ()```
 
 The type *Widget* is a little bit scary. However we never really need to work with the details of it. 
 
@@ -250,18 +251,17 @@ type Widget x =
        Spider (WithWebView x (PerformEventT Spider (SpiderHost Global))))
 ~~~ 
 
-PostBuildT is a monad transformer. It set's up a monadic environement for reflex-dom. 
-As side effects some of the reflex-dom functions will create the DOM elements.
+*PostBuildT* is a monad transformer. It set's up a monadic environement for reflex-dom. 
+As side effects, some of the reflex-dom functions will create the DOM elements.
 
-The function *mainWidget* has 2 sister functions *mainWidgetWithCss* and *mainWidgetWithHead".
+The function *mainWidget* has two sister functions *mainWidgetWithCss* and *mainWidgetWithHead".
 We will see them later.
 
 ## Function: *display*
 
-
 ```display :: (Show a, ... ) => Dynamic t a -> m ()```
 
-The function takes an argument of type *Dynamic t a* and returns unit in the current monad.
+The function takes an argument of type ```Dynamic t a``` and returns unit in the current monad.
 It uses the Show instance of the datatype *a* to build a string representation of its first parameter.
 Then it creates in the DOM a text element, where it displays this string. 
 As mentioned above, the creation of the DOM element is a monadic side effect.
@@ -292,7 +292,7 @@ Now it's easy to understand the whole line *mainWidget $ display =<< count =<< b
 
 **Try it!**
 
-# Creating Other DOM elements
+# Creating Other DOM Elements
 
 Till now we used the 2 helper functions *button* and *display* to create DOM elements.
 Reflex has 2 other very frequently used helper functions to create DOM elements:
@@ -314,7 +314,6 @@ The text is not of type *Dynamic t Text* but only of *Text*, hence it is static!
 The function *dynText* does more or less the same as the function *text*. 
 However, the function argument is of type *Dynamic t Text*, so now the text may change during the execution of the program!!
 We will see some examples later.
-
 
 ## The Function family *el*, *elAttr*, *elClass*, *elDynAttr*, *elDynClass*
 
@@ -381,7 +380,6 @@ If you use HTML elements without any values or without a child, you simply write
 
 ```el "br" $ return ()``` 
 
-
 **Try it!!**
 
 ## Function: *elAttr*
@@ -399,13 +397,6 @@ parameter of type *Map Text Text*. This parameter contains the attributes of the
 A Map is a *key-value* relation,
 In the above link example, *target* and *href* are the keys and *"_blank"* and *"http://google.com"*
 are the values.
-
-The library Data.Map defines a little helper function (=:) to create a singelton Map.
-
-
-```(=:) :: k -> a -> Map k a```
-
-The singleton Maps are then appended / merged with the (<>) operator from Monoids.
 
 The file *src/dom03.hs* contains an example for *elAttr*:
 
@@ -425,13 +416,20 @@ attrs :: Map.Map T.Text T.Text
 attrs = ("target" =: "_blank") <> ("href" =: "http://google.com")
 ~~~
 
+The library Data.Map defines a little helper function (=:) to create a singelton Map.
+
+```(=:) :: k -> a -> Map k a```
+
+Two singleton maps are then appended / merged with the (<>) operator from Data.Monoid.
+
+
 ## Function: *elClass*
 
 The function *elClass* allows you to specify the name of a class to be used by the Cascaded Style Sheets (CSS).
 
 It has the following type:
 
-```elClass :: (...) => T.Text -> T.Text -> m a -> m a```
+```elClass :: (...) => Text -> Text -> m a -> m a```
 
 The first parameter is again the type of the DOM element. The second is the name of the CSS class.
 
@@ -439,11 +437,9 @@ A small example:
 
 ```elClass "h1" "mainTitle" $ text "This is the main title"```
 
-
 In HTML:
 
 ```<h1 class="mainTitle">This is the main title</h1>```
-
 
 ## Function: *elDynAttr*
 
@@ -496,10 +492,10 @@ Comments:
 
 * We need recursive do, because we refer to the event *evClick* before it is defined.
 * *dynBool* contains our value of type *Dynamic t bool*. It is created by the *toggle* function.
-* *dynAttrs* contains the *Dynamic t (Map Text Text). It is created with an applicative call to the function *attrs*.
+* *dynAttrs* contains the *Dynamic t (Map Text Text)*. It is created with an applicative call to the function *attrs*.
 * The function *attrs* containsthe 'business logic' of this example: 
 It decides on the boolean parameter about the color of the DOM element.
-* Please note, that the function *attrs* is a normal pure function as we know and love since Haskell kindergarden!
+* Please note, that the function *attrs* is a normal pure function as we know and love them since Haskell kindergarden!
 * Transforming a Dynamic value or combining several Dynamic values with the help of applicative syntax and a pure fucntion is a common pattern in Reflex.
 
 ## Function *elDynClass*
@@ -511,6 +507,8 @@ The function has the type:
 
 ```elDynClass :: (...) => Text -> Dynamic t Text -> m a -> m a```
 
+# Main Functions
+
 
 # Basic Event Handling
 
@@ -518,8 +516,8 @@ In this section we will have a first look on how to use events.
 
 ## Function *foldDyn*
 
-Remember the first example *src/dom01.hs" with the counter. There we used the predefined function *count*.
-We will now do the same example, but handle the event ourselfs with the *foldDyn* function.
+Remember the first example *src/dom01.hs* with the counter. There we used the predefined function *count*.
+We will now do the same example, but we handle the events ourselfs with the *foldDyn* function.
 
 The function *foldDyn* has the type   
 
@@ -528,7 +526,7 @@ The function *foldDyn* has the type
 It works similar to the wellknown *foldr* function from the list data type. 
 It first creates a Dynamic with the value specified in the second parameter.
 Every time an event (third parameter) occurs, 
-it uses the function in the first parameter and folds up the values of the event.
+it uses the fold function in the first parameter and folds up the values of the event.
  
 File *src/event01.hs* contains an example for *foldDyn*
 
@@ -549,15 +547,15 @@ bodyElement = do
   return ()
 ~~~
 
-Look at the line ```numbs <- foldDyn (+) (0 :: Int)  (1 <$ evIncr)```:
+Look at the line: ```numbs <- foldDyn (+) (0 :: Int)  (1 <$ evIncr)```:
 
 * We use the normal addition as a fold function.
-* We have to specify the type of initial value. The compiler does not know whether we want to count *Int* or *Integer* or even *Float*.
+* We have to specify the type of the initial value. The compiler does not know whether we want to count up numbers of type *Int* or *Integer* or even *Float*.
 * evIncr has the type ```Event t ()```. We cannot use () as an argument for the (+) fold function. Therfore we use
 applicative syntax to replace *()* by the number *1*. 1 we can use together with our fold function (+)!
 * This is the first example that uses *event tranformation* 
 
-Please note, that the implemention of *count* in reflex-dom differs from the example above.
+Please note, that in reflex-dom the implemention of *count* differs from our example above.
 
 ## Function *leftmost*
 
@@ -590,8 +588,74 @@ bodyElement = do
   return ()
 ~~~
 
-#Function **
+## Function *mergeWith*
 
+Assume, it would be possible to click in the above example both buttons simultaneously. 
+If we click both buttons together, the function *leftmost* returns only *evIncr* and we loose *evDecr*.
+In situations, where we are not allowed to loose events, we can use the function *mergeWith*.
+
+The function *mergeWith* has the following type:
+
+```mergeWith :: Reflex t => (a -> a -> a) -> [Event t a] -> Event t a```
+
+It uses a function of type *(a -> a -> a)* to combine the payloads of all simultaneously occuring events.
+
+File *src/event03.hs* contains the full example:
+
+~~~ { .haskell .numberLines}
+{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+  rec el "h2" $ text "Combining Events with mergeWith and foldDyn"
+      dynCount <- foldDyn (+) (0 :: Int)  (mergeWith (+) [1 <$ evIncr, -1 <$ evDecr])
+      el "div" $ display dynCount
+      evIncr <- button "Increment"
+      evDecr <- button "Decrement"
+  return ()
+~~~
+
+## Function Application as Fold Function
+
+Now in addition to the increment and decrement buttons, we want a third button to reset the counter to zero.
+If we still want to use normal addition as a folding function, to reset, we have to read out the current value of the counter
+and replace the reset event with the negative value of the counter. This is very messy!!
+
+A better approach is to use events, that carry functions as payloads. 
+We transform the payload of the event of the increment button to the function ```(+ 1)```, 
+the payload of the event of the decrement button to the function ```(+ (-1))```,
+and the payload of the event of the reset button to the function ```const 0```.
+As a fold function we then use normal function application *($)* to apply the transformed function to the current value of our counter.
+
+File *src/event04.hs* has the full example:
+
+~~~ { .haskell .numberLines}
+{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+
+main :: IO ()
+main = mainWidget bodyElement
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+   el "h2" $ text "Using foldDyn with function application"
+   rec dynNum <- foldDyn ($) (0 :: Int) $ leftmost [(+ 1) <$ evIncr, (+ (-1)) <$ evDecr, const 0 <$ evReset]  
+       el "div" $ display dynNum
+       evIncr <- button "Increment"
+       evDecr <- button "Decrement"
+       evReset <- button "Reset"
+   return ()
+~~~
+
+Using function application as a fold function over a current value is very powerful!!
+
+Now, I'll stop to bother you with these counting examples!
 
 # Predefined Input Widgets
 
@@ -626,11 +690,11 @@ data TextInput t
                , _textInput_builderElement :: InputElement EventResult GhcjsDomSpace t }
 ~~~
 
+The type *GhcjsDomSpace* originates from a lower level GHCJS library, that is used to build Reflex-dom. You will not use it in your program.
+
 The function to create a text input element is:
 
-~~~ { .haskell }
-textInput :: (...) => TextInputConfig t -> m (TextInput t)
-~~~
+```textInput :: (...) => TextInputConfig t -> m (TextInput t)```
 
 ### The type class Default
 
@@ -655,22 +719,140 @@ instance Reflex t => Default (TextInputConfig t) where
                         , _textInputConfig_attributes = constDyn mempty }
 ~~~
 
+### Syntactic Sugar with (&) and (.~)
+
+*TextInputConfig* is a normal Haskell record structure with accessor functions. 
+You can use the following code to create a textInput widget configured with an initial value:
+
+```textInput def { _textInputConfig_initialValue = "0"}```
+
+However Reflex-dom uses lenses to give us syntactic sugar to populate these configuration records.
+
+With the two combinators *(&)* and *(.~)*. we can write:
+
+```textInput $ def & textInputConfig_initialValue .~ "input"```
+
+Note that the underscore (_) in front of *_textInputConfig* has gone.
+
+If you are not familar with lenses, you can use the standard Haskell record syntax.
+
 ### Examples
 
+The first example in *src/textinput01.hs* is very simple:
 
+A TextInput widget where you can enter some text. The text you entered is immediately shown in a second widget.
+It uses the *dynText* function we described earlier and the function *value* to extract the current value out of the TextInput widget.
 
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
 
+main :: IO()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = el "div" $ do
+  t <- textInput def
+  dynText $ value t
+~~~
+
+The next example in *src/textinput02.hs* shows how to use the different options to configure a TextInput widget.
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+import Data.Monoid ((<>))
+
+main :: IO ()
+main = mainWidget bodyElement
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+  el "h2" $ text "Text Input - Configuration"
+
+  el "h4" $ text "Max Length 14"
+  t1 <- textInput $ def & attributes .~ constDyn ("maxlength" =: "14") 
+  dynText $ _textInput_value t1
+
+  el "h4" $ text "Initial Value"
+  t2 <- textInput $ def & textInputConfig_initialValue .~ "input"
+  dynText $ _textInput_value t2
+
+  el "h4" $ text "Input Hint"
+  t3 <- textInput $ 
+        def & attributes .~ constDyn("placeholder" =: "type something")
+  dynText $ _textInput_value t3
+
+  el "h4" $ text "Password"
+  t4 <- textInput $ def & textInputConfig_inputType .~ "password"
+  dynText $ _textInput_value t4
+
+  el "h4" $ text "Multiple Attributes: Hint + Max Length"
+  t5 <- textInput $  def & attributes .~ constDyn ("placeholder" =: "Max 6 chars" <> "maxlength" =: "6")
+  dynText $ _textInput_value t5
+
+  el "h4" $ text "Numeric Field with initial value"
+  t6 <- textInput $ def & textInputConfig_inputType .~ "number"
+                        & textInputConfig_initialValue .~ "0"
+  dynText $ _textInput_value t6
+  
+  return ()
+~~~
 
 ## TextAreas
 
 TextInput fields have only one input text line. If you want several input lines, you must use TextAreas.
 
-TextAreas are built in the same way as TextInput fields: There is a configuration record and a data record 
-exactly as for TextInput fields. The names are different: *_textInput* is replaced by *_textArea*.
+TextAreas are built in the same way as TextInput fields: There is a configuration record and a data record. 
+They are similar to the record for TextInput fields. The names are different: *_textInput* is replaced by *_textArea*.
 
-## First useful example: ColorViewer.hs
+## Using Several TextInput Fields
 
-With  
+With the TextInput and TextArea widgets we are now able to write our first usefull GUI program in Haskell:
+It is a RGB color viewer. We enter the 3 color components, and the program shows us the resulting RGB color.
+It also shows, how to process the input of several TextInput fields
+
+The file *src/colorviewer.hs* contains the example:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import           Reflex.Dom
+import           Data.Map
+import qualified Data.Text as T
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+    el "h2" $ text "Several Text Inputs: RGB Viewer"
+    el "div" $ text "Enter RGB component values as numbers between 0 and 255"
+    dfsRed <- labledBox "Red: "
+    dfsGreen <- labledBox "Green: "
+    dfsBlue <- labledBox "Blue: "
+    textArea $ 
+        def & attributes .~ (styleMap <$> value dfsRed <*> value dfsGreen <*> value dfsBlue) 
+    return ()
+
+labledBox :: MonadWidget t m => T.Text -> m (TextInput t)
+labledBox lbl = el "div" $ do
+    text lbl
+    textInput $ def & textInputConfig_inputType .~ "number"
+                    & textInputConfig_initialValue .~ "0"
+    
+styleMap :: T.Text -> T.Text -> T.Text -> Map T.Text T.Text
+styleMap r g b = "style" =: mconcat ["background-color: rgb(", r, ", ", g, ", ", b, ")"]
+~~~
+
+As soon as you change the value in one of the TextInput fields, the background color of the TextArea widget changes!
+
+Comments:
+
+* The function *labledBox* combines a TextInput field with a label.
+* The main magic happens in the line ```styleMap <$> value dfsRed <*> value dfsGreen <*> value dfsBlue```. 
+We use again applicative syntax to call the function *styleMap* with the current values of our 3 input fields.
+* The function styleMap contains our 'business logic'. It creates the correct string to color the resulting TextArea widget.
+* Again the function *styleMap* is a normal pure Haskell function. 
 
 
 ## Checkboxes
@@ -697,26 +879,63 @@ instance Reflex t => Default (CheckboxConfig t) where
 
 And here is the function to create the DOM element
 
-~~~ { .haskell }
-checkbox :: (...) => Bool -> CheckboxConfig t -> m (Checkbox t)
-~~~
+```checkbox :: (...) => Bool -> CheckboxConfig t -> m (Checkbox t)```
 
 ### Examples
 
 #### checkbox01.hs
 
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+import qualified Data.Text as T
+
+main :: IO ()
+main = mainWidget $ el "div" $ do
+  el "h2" $ text "Checkbox (Out of the box)"
+  cb <- checkbox True def
+  text "Click me"
+  el "p" $ return ()
+  let dynState = checkedState <$> value cb 
+  dynText dynState 
+
+checkedState :: Bool -> T.Text
+checkedState True = "Checkbox is checked"
+checkedState _    = "Checkbox is not checked"
+~~~
+
 This is the most simple way to create and use a checkbox. However, you have to click exactly into 
-the small square to change the state of the checkbox. When you click into the label *Click me* it does not
+the small square to change the state of the checkbox. When you click at the label *Click me* it does not
 change it's state. This is very user unfriendly!
 
 #### checkbox02.hs
 
-This example shows how to fix this issue:
-We create a combined widget: The checkbox element is a child of a *label* element. 
-The result of the combined widget is the event of the checkbox.
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+import qualified Data.Text as T
 
-It works now as expected: To change the stete of the checkbox, you can either click onto the small square 
-or into the text *Click me*
+main = mainWidget $ el "div" $ do
+  el "h2" $ text "Checkbox - User friendly"
+  cb <- el "label" $ do
+    cb1 <- checkbox True def
+    text "Click me"
+    return cb1
+  el "p" $ return ()
+  let dynState = checkedState <$> value cb  
+  dynText dynState 
+
+checkedState :: Bool -> T.Text
+checkedState True = "Checkbox is checked"
+checkedState _    = "Checkbox is not checked"
+~~~
+
+This example shows how to fix the issue with checkbox01.hs.
+We create a combined widget: The checkbox element is a child of a *label* element. 
+The result of the combined widget is the checkbox.
+
+It works now as expected: To change the state of the checkbox, you can either click into the small square 
+or at the text *Click me*
 
 ## Radio Buttons
 
