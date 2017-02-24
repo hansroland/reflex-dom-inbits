@@ -18,8 +18,10 @@ Reflex is a strong foundation to handle events and values that change over time.
 Reflex-Dom is built on Reflex and on GHCJS.Dom. It allows you to write GUI programs that run in a 
 Web Browser or as a 'native' application in Webkit. Reflex-Dom was written by Ryan Trinkle too.
 
+Reflex-dom protects you from all the low level details of an FRP implementation. Writing GUI programs in reflex-dom is much fun.
+You can really write GUI programs in a functional way and you can separate the GUI logic from the business logic.
 It's not necessary to be a Haskell guru to write GUI programs with reflex-dom. 
-A good understanding of basic Haskell and the concepts of *Functor*, *Applicative* and *Monad* is enough. 
+A good understanding of basic Haskell with the concepts of *Functor*, *Applicative* and *Monad* is enough. 
 Of course, the more experience you have, the easier it is.
 
 
@@ -149,7 +151,8 @@ The main improvements of the Github versions are:
 
 The last 2 changes make the programs simpler!
 
-In this tutorial, we will use the library versions from Github.
+In this tutorial, we will use the library versions reflex-dom-0.4 and reflex-0.5 from Github. 
+Unfortunately most of the examples will not compile with reflex-dom-0.3!
  
 
 ## Popular Language Extensions
@@ -189,7 +192,7 @@ From all the 1001 libraries stored on Hackage, we will use only very few:
 
 ```import Reflex.Dom``` 
 
-Ok the tutorial is about Reflex.Dom so we should import it. 
+Ok this tutorial is about Reflex.Dom so we should import and use it. 
 It's not necessary to import Reflex. Reflex.Dom reexports all the needed functions of Reflex.
 
 ```import qualified Data.Text as T```
@@ -204,7 +207,7 @@ Haskell Maps are very popular in *Reflex-dom*. They are used in a lot of functio
 ```import Data.Monoid``` 
 
 We normally use the function *mempty* to create an empty Map, 
-or the function *mappend* rsp *(<>)* to combine two Maps.
+and the function *mappend* rsp *(<>)* to combine two Maps.
 
 
 ## Some comments to the code examples
@@ -252,7 +255,8 @@ type Widget x =
 ~~~ 
 
 *PostBuildT* is a monad transformer. It set's up a monadic environement for reflex-dom. 
-As side effects, some of the reflex-dom functions will create the DOM elements.
+As side effects, some of the reflex-dom functions will create the DOM elements. 
+To follow this tutorial you don't need to understand the concepts behind monad transformers.
 
 The function *mainWidget* has two sister functions *mainWidgetWithCss* and *mainWidgetWithHead".
 We will see them later.
@@ -509,6 +513,123 @@ The function has the type:
 
 # Main Functions
 
+With the function *elAttr*, *elClass*, *elDynAttr*, and *elDynClass* we can reference selectors of CSS style sheets.
+But with the function *mainWidget* we have no possibility to specify one or several css files. 
+As mentioned above, *mainWidget* has two sister function, and they solve this little issue..
+
+This is not a tutorial about Cascaded Style Sheets. Therefore I don't spice up my examples with sexy css.
+In the next 2 examples, I reference a file "css/simple.css". It contains the most simple css ever possible:
+
+```h1 { color: Green; }```
+
+It just uses a green color for all header-1 DOM elements.
+
+
+## Function *mainWidgetWithCss*
+
+This function has the following type:
+
+```
+mainWidgetWithCss :: ByteString -> 
+        Widget Spider (Gui Spider (WithWebView SpiderHost) (HostFrame Spider)) () -> 
+        IO ()
+```
+
+Again it looks scary. The first parameter is a ByteString containing your css specifications.
+Normally you don't want to have the css specs in your Haskell program. You want them in a separate file.
+
+On Hackage, there is a library called *file-embed*. 
+It contains a function *embedFile* that allows you, during compilation, to embed  the contents of a file into your source code.
+This function uses Template Haskell, so we need the GHC language extension for Template Haskell.
+
+The second paramter of *mainWidgetWithCss* is just the same thing as the parameter of the function *mainWidget*, 
+we used for all our examples till now. So it is the HTML body element.
+
+The file *src/main01.hs* contains a full example:
+
+~~~ { .haskell }
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+import Data.FileEmbed
+
+main :: IO ()
+main = mainWidgetWithCss css bodyElement
+   where css = $(embedFile "css/simple.css")
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement =  el "div" $ do
+     el "h1" $ text "This title should be green"
+     return ()
+~~~
+
+Comments:
+
+* Template Haskell runs at compile time. If you change something in your css file, you have to recompile 
+and redeploy your application.
+* The path to the css file (*css/simple.css* in the above example) is used by the compiler and therefore relative to your working
+directory during compile time.
+* If the css file does not exist, or the path is wrong, you will get an error during compile time.
+
+## Function *mainWidgetWithHead*
+
+The function *mainWidgetWithHead* has the following type:
+
+``` 
+mainWidgetWithHead :: 
+   Widget Spider (Gui Spider (WithWebView SpiderHost) (HostFrame Spider)) () -> 
+   Widget Spider (Gui Spider (WithWebView SpiderHost) (HostFrame Spider)) () -> IO () 
+```
+The function *mainWidgetWithHead* takes two parameters as we know them from the functions *mainWidget* and *mainWidgetWithCss*.
+The first parameter is the HTML head element, and the second parameter the HTML body element.
+
+File *src/main02.hs* contains the example:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+import Data.Map as Map
+
+main :: IO ()
+main = mainWidgetWithHead headElement bodyElement
+
+headElement :: MonadWidget t m => m ()
+headElement = do
+  el "title" $ text "Main Title"
+  styleSheet "css/simple.css"
+  where
+    styleSheet link = elAttr "link" (Map.fromList [
+          ("rel", "stylesheet")
+        , ("type", "text/css")
+        , ("href", link)
+      ]) $ return ()
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement =  el "div" $ do
+     el "h1" $ text "This title should be green"
+     return ()
+~~~
+
+Comments:
+
+* We use the function *Map.fromList* to create the map parameter for the function *elAttr*.
+* The path to the css file (*css/simple.css* in the above example) is used during run time. 
+It is relative to the directory you run your program from.
+* Depending on how you run your reflex-dom program, you have to copy your *.css files to the correct directory.
+* If the css file does not exist, or the path is wrong, the browser or WebkitGtk will simply ignore your css specs.
+* If you change your css files, the changes become active after a restart of your program.
+* If you run your program in the interactive shell with *ghcjs --interactive*, this example will not work. 
+The interactive shell of ghcjs does not serve any files.
+* It is possible, to specify other options in your header element.
+* Unfortunately you have to annotate the type ```:: MonadWidget t m => m ()``` for the functions *headElement* and *bodyElement*. 
+GHC is not able to infer these types and gives you a not so nice error message.
+
+## Summary
+
+* Use *mainWidget* for small examples.
+* Use *mainWidgetWithCss* if you don't want anybody to change your CSS specifications.
+* Use *mainWidgetWithHead* for professional projects.
+
 
 # Basic Event Handling
 
@@ -655,19 +776,22 @@ bodyElement = do
 
 Using function application as a fold function over a current value is very powerful!!
 
-Now, I'll stop to bother you with these counting examples!
-
 # Predefined Input Widgets
 
-In this section, we look at the standard DOM input elements. They are predefined in reflex-dom and easy to use.
+In this section, we look at the standard reflex-dom input elements. They are predefined and easy to use.
+We already have seen buttons, hence we will not cover them here.
+ 
+For most of the input widgets, reflex-dom defines two data structures
 
-## Buttons
-
-We have already used a lot of buttons. They 
+* configuration record 
+* element record.
 
 ## Text Input Fields
 
-Reflex-dom defines a Haskell data type to specify the different options of a text input field:
+*TextInput* fields are of the most popular input widgets in GUI applications. 
+They allows the user to enter texual data, eg their name, address, phone and credit card numbers and so on.
+
+The configuration record has the following definition:
 
 ~~~ { .haskell }
 data TextInputConfig t
@@ -677,7 +801,7 @@ data TextInputConfig t
                      , _textInputConfig_attributes :: Dynamic t (Map Text Text) }
 ~~~
 
-and it also defines a data type for the resulting DOM element:
+and the element record is defined as:
 
 ~~~ { .haskell }
 data TextInput t
@@ -810,7 +934,6 @@ They are similar to the record for TextInput fields. The names are different: *_
 
 With the TextInput and TextArea widgets we are now able to write our first usefull GUI program in Haskell:
 It is a RGB color viewer. We enter the 3 color components, and the program shows us the resulting RGB color.
-It also shows, how to process the input of several TextInput fields
 
 The file *src/colorviewer.hs* contains the example:
 
@@ -853,15 +976,13 @@ Comments:
 We use again applicative syntax to call the function *styleMap* with the current values of our 3 input fields.
 * The function styleMap contains our 'business logic'. It creates the correct string to color the resulting TextArea widget.
 * Again the function *styleMap* is a normal pure Haskell function. 
-
+* The example shows, how to process the input of several TextInput fields
 
 ## Checkboxes
 
-For checkboxes, we have the same thing as for TexInput and TextArea: There is a record structure for the configuration,
-one for the widget element and a function to create the checkbox widget in the DOM. 
-However, everything is a little bit simpler:
+Checkboxes are rather simple, therefore the configuration and the element records are simple too.
 
-The record structure for the configuration:
+The configuration record:
 
 ~~~ { .haskell }
 data CheckboxConfig t
@@ -869,7 +990,7 @@ data CheckboxConfig t
                      , _checkboxConfig_attributes :: Dynamic t (Map Text Text) }
 ~~~
 
-The data type *CheckboxConfig* supports the *Default* type class:
+The *Default* instance:
 
 ~~~ { .haskell }
 instance Reflex t => Default (CheckboxConfig t) where
@@ -877,13 +998,11 @@ instance Reflex t => Default (CheckboxConfig t) where
                        , _checkboxConfig_attributes = constDyn mempty }
 ~~~
 
-And here is the function to create the DOM element
+The element function:
 
 ```checkbox :: (...) => Bool -> CheckboxConfig t -> m (Checkbox t)```
 
-### Examples
-
-#### checkbox01.hs
+### Example *src/checkbox01.hs*
 
 ~~~ { .haskell }
 {-# LANGUAGE OverloadedStrings #-}
@@ -908,7 +1027,7 @@ This is the most simple way to create and use a checkbox. However, you have to c
 the small square to change the state of the checkbox. When you click at the label *Click me* it does not
 change it's state. This is very user unfriendly!
 
-#### checkbox02.hs
+### Example *src/checkbox02.hs*
 
 ~~~ { .haskell }
 {-# LANGUAGE OverloadedStrings #-}
