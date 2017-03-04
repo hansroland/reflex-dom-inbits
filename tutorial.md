@@ -33,7 +33,7 @@ Normally input functions are impure. Assume a function *getChar* that reads a si
 For different invocations the function *getChar*  normally returns a different character, depending on the key that was pressed on the keyboad .
 Therefore such a function is not a pure Haskell function. As everybody knows Haskell uses monadic IO actions to avoid unpure functions.
 
-Functional Reactive Programming takes an other approach. All potentially impure functions have a time parameter
+Functional Reactive Programming (FRP) takes an other approach. All potentially impure functions have a time parameter
 and the FRP system makes sure, that every call to such a function is done with a new time value.
 
 In pseudo code:
@@ -54,7 +54,7 @@ In Reflex the time parameter is always shown explicit in the type declaration of
 Normally a type parameter with the name *t* is used.
 However it's never necessary to supply this parameter as a programmer when you call the function.
 
-Reflex uses 3 main time-dependent data types:
+Reflex has 3 main time-dependent data types:
 
 * Event
 * Behavior
@@ -140,7 +140,7 @@ When working with Dynamics it is very common to use applicative syntax.
 ## Used Library Versions
 
 Today Hackage has reflex version 0.4 and reflex-dom version 0.3. 
-However for both libraries there are newer and better versions on Github: [reflex-0.5](https://github.com/reflex-frp/reflex) and 
+However for both libraries there are newer and much better versions on Github: [reflex-0.5](https://github.com/reflex-frp/reflex) and 
 [reflex-dom.0.4](https://github.com/reflex-frp/reflex-dom)
 
 The main improvements of the Github versions are:
@@ -296,7 +296,7 @@ Now it's easy to understand the whole line *mainWidget $ display =<< count =<< b
 
 **Try it!**
 
-# Creating Other DOM Elements
+# Creating other DOM Elements
 
 Till now we used the 2 helper functions *button* and *display* to create DOM elements.
 Reflex has 2 other very frequently used helper functions to create DOM elements:
@@ -380,11 +380,23 @@ main = mainWidget $ do
       el "li" $ text "Efficient"
 ~~~
 
-If you use HTML elements without any values or without a child, you simply write:
+**Try it!!**
+
+## Function *blank*
+
+If you use HTML elements without any values or without a child, you could simply write:
 
 ```el "br" $ return ()``` 
 
-**Try it!!**
+Because this ```return ()``` is used frequently and we need a ```$```, there is a little helper with the following definition:
+
+~~~ { .haskell }
+blank :: forall m. Monad m => m ()
+blank = return ()
+~~~
+
+Hence we can write: ```el "br" blank```
+
 
 ## Function: *elAttr*
 
@@ -392,7 +404,7 @@ With the function *el*, we can't create a DOM element with attributes, eg a link
 
 ```<a target="_blank" href="http://google.com">Google!</a>```
 
-To add attributes, reflexse functions all have -dom has a function *elAttr*. It has the type:
+To add attributes, reflex-dom has a function *elAttr*. It has the type:
 
 ```elAttr :: (...) => Text -> Map Text Text -> m a -> m a```
 
@@ -494,12 +506,13 @@ attrs b = "style" =: ("color: " <> color b)
 
 Comments: 
 
-* We need recursive do, because we refer to the event *evClick* before it is defined.
+* We need recursive do: We refer to the event *evClick* before it's defined.
 * *dynBool* contains our value of type *Dynamic t bool*. It is created by the *toggle* function.
 * *dynAttrs* contains the *Dynamic t (Map Text Text)*. It is created with an applicative call to the function *attrs*.
 * The function *attrs* containsthe 'business logic' of this example: 
 It decides on the boolean parameter about the color of the DOM element.
 * Please note, that the function *attrs* is a normal pure function as we know and love them since Haskell kindergarden!
+So if you have a program that needs some input values, you can easily write a reflex-dom frontend, without changing your logic!
 * Transforming a Dynamic value or combining several Dynamic values with the help of applicative syntax and a pure fucntion is a common pattern in Reflex.
 
 ## Function *elDynClass*
@@ -536,10 +549,10 @@ mainWidgetWithCss :: ByteString ->
 ```
 
 Again it looks scary. The first parameter is a ByteString containing your css specifications.
-Normally you don't want to have the css specs in your Haskell program. You want them in a separate file.
+Normally you don't want to have the css specs embeded in your Haskell program. You want them in a separate file.
 
 On Hackage, there is a library called *file-embed*. 
-It contains a function *embedFile* that allows you, during compilation, to embed  the contents of a file into your source code.
+It contains a function *embedFile* that allows you, during compilation, to embed the contents of a file into your source code.
 This function uses Template Haskell, so we need the GHC language extension for Template Haskell.
 
 The second paramter of *mainWidgetWithCss* is just the same thing as the parameter of the function *mainWidget*, 
@@ -566,7 +579,7 @@ bodyElement =  el "div" $ do
 Comments:
 
 * Template Haskell runs at compile time. If you change something in your css file, you have to recompile 
-and redeploy your application.
+and re-deploy your application.
 * The path to the css file (*css/simple.css* in the above example) is used by the compiler and therefore relative to your working
 directory during compile time.
 * If the css file does not exist, or the path is wrong, you will get an error during compile time.
@@ -748,9 +761,12 @@ If we still want to use normal addition as a folding function, to reset, we have
 and replace the reset event with the negative value of the counter. This is very messy!!
 
 A better approach is to use events, that carry functions as payloads. 
-We transform the payload of the event of the increment button to the function ```(+ 1)```, 
-the payload of the event of the decrement button to the function ```(+ (-1))```,
-and the payload of the event of the reset button to the function ```const 0```.
+We transform 
+
+* the payload of the event of the increment button to the function ```(+ 1)```, 
+* the payload of the event of the decrement button to the function ```(+ (-1))```,
+* the payload of the event of the reset button to the function ```const 0```.
+
 As a fold function we then use normal function application *($)* to apply the transformed function to the current value of our counter.
 
 File *src/event04.hs* has the full example:
@@ -975,7 +991,7 @@ Comments:
 * The main magic happens in the line ```styleMap <$> value dfsRed <*> value dfsGreen <*> value dfsBlue```. 
 We use again applicative syntax to call the function *styleMap* with the current values of our 3 input fields.
 * The function styleMap contains our 'business logic'. It creates the correct string to color the resulting TextArea widget.
-* Again the function *styleMap* is a normal pure Haskell function. 
+* Again the function *styleMap* is a normal, simple, pure Haskell function! 
 * The example shows, how to process the input of several TextInput fields
 
 ## Checkboxes
@@ -1014,7 +1030,7 @@ main = mainWidget $ el "div" $ do
   el "h2" $ text "Checkbox (Out of the box)"
   cb <- checkbox True def
   text "Click me"
-  el "p" $ return ()
+  el "p" blank
   let dynState = checkedState <$> value cb 
   dynText dynState 
 
@@ -1040,7 +1056,7 @@ main = mainWidget $ el "div" $ do
     cb1 <- checkbox True def
     text "Click me"
     return cb1
-  el "p" $ return ()
+  el "p" blank
   let dynState = checkedState <$> value cb  
   dynText dynState 
 
@@ -1074,18 +1090,122 @@ or at the text *Click me*
 
 ~~~
 
-# The Function family *el'*, *elAttr'*, *elClass'*, *elDynAttr'*, *elDynClass'* 
+# Defining your own events
+
+## The Function family *el'*, *elAttr'*, *elClass'*, *elDynAttr'*, *elDynClass'* 
 
 In this section of the tutorial, we will look at the second function family to create DOM elements.
-The names of these functions all end with a prime (').
+The names of these functions all end with a prime ('). They take the same parameters and work similar as the functions without the prime 
+in the name, but they give you more power!
+
+As an example we look at the difference between *el* and *el'*. Similar facts hold for the other functions.
+
+The unprimed version *el* creates a DOM element, but does not give you any access to the created element:
+
+~~~ { .haskell }
+el :: DomBuilder t m => Text -> m a -> m a
+~~~
+
+With the primed function *el'* we get access to the created DOM element:
+
+~~~ { .haskell }
+el' :: DomBuilder t m => Text -> m a -> m (Element EventResult (DomBuilderSpace m) t, a)
+~~~
+
+Again the type of *el'* is a little bit scary!
+
+Without going into details, we see that the primed function *el'* takes the same arguments as the unprimed function *el*. 
+
+We can simplify the type of *el'* to
+
+el' :: (...) => Text -> m a -> m (*Element*, a)
 
 
-## Function *button* - Do it yourself!
+It returns a tuple *(Element, a)*:
+The first value of this tuple is the DOM element, the second value is (ignoring monadic wrapping) the second parameter of the *el'* function.
 
-*button* is a simple helper function to create a button in the DOM. It returns an event
-with unit *()* in the payload.
-Unfortunately, this function is not very flexible: We can only specify the label of the button and nothing more.
-If we want to add a CSS class or directly some attributes we have to define the button with on of the *el* functions:
+With access to the DOM element, we are now able to add events to our widgets. The next section shows the details. 
 
+## The function *domEvent*
 
-### Communication with a Web Server
+When we use the unprimed version of *el* to define a button
+
+```el "button" $ text "Click me"```
+
+we get a button, but when clicked, it will not create any events. 
+
+With the return value of the primed version, and with the help of the function *domEvent* we are now able to add events to DOM elements.
+
+~~~ { .haskell }
+button :: DomBuilder t m => Text -> m (Event t ())
+button t = do
+  (e, _) <- el' "button" $ text t
+  return $ domEvent Click e
+~~~
+
+Please note, that reflex-dom uses a slightly different definition. 
+
+The function *domEvent* takes an event name as a first parameter and an element as a second parameter, and returns an event of a variable type.
+
+Reflex-dom uses some advanced type hackery like TypeFamilies to create events of variable types depending of the  event name. 
+
+* ```domEvent Click e``` returns an event of type *()*
+* ```domEvent Mousedown e``` returns an event of type *(Int,Int)* with the mouse coordinates.
+
+Everything is defined in the module [Reflex.Dom.Builder.Class.Events](https://github.com/reflex-frp/reflex-dom/blob/develop/src/Reflex/Dom/Builder/Class/Events.hs):
+
+* The data type *EventName* lists the possible event names.
+* The type family *EventResultType* defines the type of the resulting event.
+
+## Example
+
+Why do we need this? In a lot of web shops you must check a checkbox to accept the business conditions like *low quality at high prices*.
+If you don't accept the conditions, the *order* button is disabled and you cannot order!
+We are now able to define the checkbox, the button and the logic to enable or disable the button.
+
+File *src/disableButton.hs* contains the code:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+import           Reflex.Dom
+import qualified Data.Text as T
+import           Data.Monoid
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = el "div" $ do
+  el "h2" $ text "Button enabled / disabled"
+  cb <- el "label" $ do
+    cb1 <- checkbox True def
+    text "Enable or Disable the button"
+    return cb1
+  el "p" blank
+  counter :: Dynamic t Int <- count =<< disaButton (_checkbox_value cb) "Click me"
+  el "p" blank
+  display counter
+
+-- | A button that can be enabled and disabled
+disaButton :: MonadWidget t m
+            => Dynamic t Bool -- ^ enable or disable button
+            -> T.Text         -- ^ Label
+            -> m (Event t ())
+disaButton enabled label = do
+    let attrs = ffor enabled $ \e -> monoidGuard (not e) $ "disabled" =: "disabled"
+    (btn, _) <- elDynAttr' "button" attrs $ text label
+    pure $ domEvent Click btn
+
+-- | A little helper function for data types in the *Monoid* type class: 
+-- If the boolean is True, return the first parameter, else return the null element of the monoid
+monoidGuard :: Monoid a => Bool -> a -> a
+monoidGuard p a = if p then a else mempty
+~~~
+
+The function *disaButton* contains the main logic. It takes a Dynamic Bool, which indicates whether 
+the button should be enabled or disabled.
+
+*ffor* is the flipped version of *fmap*: ```ffor :: Functor f => f a -> (a -> b) -> f b```
+
+# Communication with a Web Server

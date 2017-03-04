@@ -7,7 +7,7 @@ main = mainWidget $ el "div" $ do
   el "h2" $ text "Checkbox (Out of the box)"
   cb <- checkbox True def
   text "Click me"
-  el "p" $ return ()
+  el "p" blank
   let dynState = checkedState <$> value cb 
   dynText dynState 
 
