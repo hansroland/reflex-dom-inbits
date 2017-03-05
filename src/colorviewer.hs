@@ -8,7 +8,7 @@ main = mainWidget bodyElement
 
 bodyElement :: MonadWidget t m => m ()
 bodyElement = do
-    el "h2" $ text "Several Text Inputs: RGB Viewer"
+    el "h2" $ text "RGB Viewer"
     el "div" $ text "Enter RGB component values as numbers between 0 and 255"
     dfsRed <- labledBox "Red: "
     dfsGreen <- labledBox "Green: "

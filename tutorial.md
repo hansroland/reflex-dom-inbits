@@ -1,19 +1,21 @@
-# A Tutorial about Reflex-Dom
+# Writing GUI Programs in Haskell - A Beginner Friendly Tutorial
+
+This is a beginner-friendly tutorial. It shows how to write Haskell programs  with a graphical user interface. 
 
 Today most computer programs have a graphical user interface (GUI). 
 However Haskell programs with a GUI are still rare. Haskell programs normally use a command line interface (CLI). 
 For a long time, there were no good options to write GUI programs in Haskell. 
-It is difficult to mat the event driven nature of a GUI program onto the functional paradigm. 
+It is difficult to match the event driven nature of a GUI program onto the functional paradigm. 
 The traditional object oriented way to program a GUI application uses callbacks. 
 These callbacks need a lot of global state and managing state is not easy in Haskell.
 
 To solve these problems the Haskell community developed a lot of new new ideas. 
 One of the solutions is called *Functional Reactive Programming*, *FRP* for short. 
 Conal Elliott and Paul Hudak first developed the basic ideas and published 2007 the paper [Functional Reactive Animation](http://conal.net/papers/icfp97/)
-On Hackage there a lot
+On Hackage you can find a lot
 of different FRP libraries, eg *elera*, *frpnow*, *grapefruit-frp*, *netwire*, *reactive-banana*, *reflex* and many more.
 
-In this tuorial we use Reflex and Reflex-Dom. Reflex is a FRP implemetation written by Ryan Trinke.
+In this tuorial we use Reflex and Reflex-Dom. Reflex is a FRP implemetation written by Ryan Trinkle.
 Reflex is a strong foundation to handle events and values that change over time. 
 Reflex-Dom is built on Reflex and on GHCJS.Dom. It allows you to write GUI programs that run in a 
 Web Browser or as a 'native' application in Webkit. Reflex-Dom was written by Ryan Trinkle too.
@@ -24,14 +26,13 @@ It's not necessary to be a Haskell guru to write GUI programs with reflex-dom.
 A good understanding of basic Haskell with the concepts of *Functor*, *Applicative* and *Monad* is enough. 
 Of course, the more experience you have, the easier it is.
 
-
 # Basics of Functional Reactive Programming (FRP) and Reflex
 
 ## The Basic Ideas of Functional Reactive Programming
 
 Normally input functions are impure. Assume a function *getChar* that reads a single character from the keyboard.
 For different invocations the function *getChar*  normally returns a different character, depending on the key that was pressed on the keyboad .
-Therefore such a function is not a pure Haskell function. As everybody knows Haskell uses monadic IO actions to avoid unpure functions.
+Therefore such a function is not a pure Haskell function. As everybody knows Haskell uses monadic IO actions to avoid impure functions.
 
 Functional Reactive Programming (FRP) takes an other approach. All potentially impure functions have a time parameter
 and the FRP system makes sure, that every call to such a function is done with a new time value.
@@ -50,7 +51,7 @@ However the FRP framework will not allow you to do multiple calls to *getChar* w
 
 With this trick, *getChar* is now a pure function.
 
-In Reflex the time parameter is always shown explicit in the type declaration of the function.
+In Reflex the time parameter is always shown explicitely in the type declaration of the function.
 Normally a type parameter with the name *t* is used.
 However it's never necessary to supply this parameter as a programmer when you call the function.
 
@@ -145,11 +146,11 @@ However for both libraries there are newer and much better versions on Github: [
 
 The main improvements of the Github versions are:
 
-* Use the *text* library with the data type *Text* instead of *String*. This gives performance.
+* Use the *text* library with the data type *Text* instead of the data type *String*. This gives performance.
 * Data type *Event* is now a Functor. 
 * Data type *Dynamic* is a Monad.
 
-The last 2 changes make the programs simpler!
+The last 2 changes make the programs much simpler!
 
 In this tutorial, we will use the library versions reflex-dom-0.4 and reflex-0.5 from Github. 
 Unfortunately most of the examples will not compile with reflex-dom-0.3!
@@ -172,7 +173,7 @@ Sometimes we need to access a value or an event from a DOM element before it is 
 ```{-# LANGUAGE ScopedTypeVariables #-}```
 
 Sometimes the compiler is unable to infer the type of a bound variable in a do-block. 
-Or sometimes we want to document the type of such a variable. This makes it easier to understand.
+Or sometimes we want to document the type of such a variable. This makes it easier to understand the code.
 With the extension *ScopedTypeVariables* GHC accepts such type annotations.
 
 In the following example we specify the type of the value *name*.
@@ -258,7 +259,7 @@ type Widget x =
 As side effects, some of the reflex-dom functions will create the DOM elements. 
 To follow this tutorial you don't need to understand the concepts behind monad transformers.
 
-The function *mainWidget* has two sister functions *mainWidgetWithCss* and *mainWidgetWithHead".
+The function *mainWidget* has two sister functions *mainWidgetWithCss* and *mainWidgetWithHead*.
 We will see them later.
 
 ## Function: *display*
@@ -270,28 +271,28 @@ It uses the Show instance of the datatype *a* to build a string representation o
 Then it creates in the DOM a text element, where it displays this string. 
 As mentioned above, the creation of the DOM element is a monadic side effect.
 
-*display* has a precondition of *Show a*. It has other preconditions too, 
+*display* has a precondition of *Show a*. It has other preconditions too. 
 If you use *mainWidget* or one of its sister functions, the other preconditions are normally fullfilled automatically.
-Thefore I don't show them here and in the examples to follow..
+Thefore I don't show them here and in the most examples to follow..
 
 ## Function: *count*
 
 ```count :: (Num b, ...) =>  Event t a -> m (Dynamic t b)```
 
 The *count* function takes an event as argument and creates a Dynamic.
-In this Dynamic the function count's up the number of times the event occured or fired.
+In this Dynamic the function counts up the number of times the event occured or fired.
 
 ## Function: *button*
 
 ```button :: (...) => Text -> m (Event t ())```
 
-The *button* function takes a text as argument. It creates a DOM button element with the text, and returns
+The *button* function takes a text as argument. It creates a DOM button element labelled with the text, and returns
 an event with *()* as payload.
 
 Now it's easy to understand the whole line *mainWidget $ display =<< count =<< button "ClickMe"*:
 
-* Clicking on the button creates or triggers events, 
-* The function *count* creates a dynamic value with the total number of these events.
+* Clicking on the button creates or triggers an event. 
+* The function *count* creates a *Dynamic* value with the total number of these events.
 * The function *display* creates a DOM element with a string representation of this number and displays it as DOM element.
 
 **Try it!**
@@ -316,7 +317,7 @@ The text is not of type *Dynamic t Text* but only of *Text*, hence it is static!
 ```dynText :: (...) => Dynamic t Text -> m ()```
 
 The function *dynText* does more or less the same as the function *text*. 
-However, the function argument is of type *Dynamic t Text*, so now the text may change during the execution of the program!!
+However, the function argument is of type *Dynamic t Text*. The text may change during the execution of the program!!
 We will see some examples later.
 
 ## The Function family *el*, *elAttr*, *elClass*, *elDynAttr*, *elDynClass*
@@ -327,7 +328,7 @@ Reflex-dom has 2 function families to create all the different kinds of DOM elem
 * el', elAttr', elClass', elDynAttr', elDynClass'
 
 First we will look at the family without the primes ' in the name. 
-The second function family with the primes in the name we will cover in a later section.
+We will cover the second function family with the primes in the name in a later section.
 
 ## Function: *el*
 
@@ -381,6 +382,9 @@ main = mainWidget $ do
 ~~~
 
 **Try it!!**
+
+Unfortunately, this web page is very static, It doesn't react to any input actions of the user.
+Later, we will learn how make more dynamic web pages. 
 
 ## Function *blank*
 
@@ -436,7 +440,7 @@ The library Data.Map defines a little helper function (=:) to create a singelton
 
 ```(=:) :: k -> a -> Map k a```
 
-Two singleton maps are then appended / merged with the (<>) operator from Data.Monoid.
+Two singleton maps are then merged / appended with the (<>) operator from Data.Monoid.
 
 
 ## Function: *elClass*
@@ -509,11 +513,11 @@ Comments:
 * We need recursive do: We refer to the event *evClick* before it's defined.
 * *dynBool* contains our value of type *Dynamic t bool*. It is created by the *toggle* function.
 * *dynAttrs* contains the *Dynamic t (Map Text Text)*. It is created with an applicative call to the function *attrs*.
-* The function *attrs* containsthe 'business logic' of this example: 
+* The function *attrs* contains the 'business logic' of this example: 
 It decides on the boolean parameter about the color of the DOM element.
 * Please note, that the function *attrs* is a normal pure function as we know and love them since Haskell kindergarden!
 So if you have a program that needs some input values, you can easily write a reflex-dom frontend, without changing your logic!
-* Transforming a Dynamic value or combining several Dynamic values with the help of applicative syntax and a pure fucntion is a common pattern in Reflex.
+* Transforming a Dynamic value or combining several Dynamic values with the help of applicative syntax and a pure function is a common pattern in Reflex.
 
 ## Function *elDynClass*
 
@@ -757,8 +761,8 @@ bodyElement = do
 ## Function Application as Fold Function
 
 Now in addition to the increment and decrement buttons, we want a third button to reset the counter to zero.
-If we still want to use normal addition as a folding function, to reset, we have to read out the current value of the counter
-and replace the reset event with the negative value of the counter. This is very messy!!
+The challenge is this reset: To continue to use normal addition as a fold function, we would have to read out the current value of the counter
+and replace the reset event with the negative value of the counter. This, however, is very messy!!
 
 A better approach is to use events, that carry functions as payloads. 
 We transform 
@@ -790,7 +794,7 @@ bodyElement = do
    return ()
 ~~~
 
-Using function application as a fold function over a current value is very powerful!!
+Using function application as a fold function over a current value is very powerful!! W'll wee more examples.
 
 # Predefined Input Widgets
 
@@ -964,7 +968,7 @@ main = mainWidget bodyElement
 
 bodyElement :: MonadWidget t m => m ()
 bodyElement = do
-    el "h2" $ text "Several Text Inputs: RGB Viewer"
+    el "h2" $ text "RGB Viewer"
     el "div" $ text "Enter RGB component values as numbers between 0 and 255"
     dfsRed <- labledBox "Red: "
     dfsGreen <- labledBox "Green: "
@@ -1198,14 +1202,14 @@ disaButton enabled label = do
     pure $ domEvent Click btn
 
 -- | A little helper function for data types in the *Monoid* type class: 
--- If the boolean is True, return the first parameter, else return the null element of the monoid
+-- If the boolean is True, return the first parameter, else return the null or empty element of the monoid
 monoidGuard :: Monoid a => Bool -> a -> a
 monoidGuard p a = if p then a else mempty
 ~~~
 
 The function *disaButton* contains the main logic. It takes a Dynamic Bool, which indicates whether 
-the button should be enabled or disabled.
+the button should be enabled or disabled. 
 
-*ffor* is the flipped version of *fmap*: ```ffor :: Functor f => f a -> (a -> b) -> f b```
+*ffor* is like *fmap* but with flipped parameters: ```ffor :: Functor f => f a -> (a -> b) -> f b```
 
 # Communication with a Web Server
