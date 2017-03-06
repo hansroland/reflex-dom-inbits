@@ -12,7 +12,7 @@ Therefore Reflex-Dom programs can be run in the Web Browser or as a Webkit-Gtk a
 It's not necessary to be a Haskell guru to follow this tutorial. 
 A basic understanding of Haskell and the concepts of *Functor*, *Applicative* and *Monad* is enough.
 With Reflex-Dom you can write GUI applications in Haskell without understanding the concepts of
-*State Monad* or *Monad Transformers*. You should also have a basic background on *HTML* and 
+*State Monad* or *Monad Transformers*. You need also a basic background on *HTML* and 
 on *Cascaded Style Sheets* (*CSS*). Of course, the more experience you have, the easier it is.
 
 Start by reading the file [tutorial.md](tutorial.md)

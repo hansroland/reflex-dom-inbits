@@ -26,7 +26,7 @@ bodyElement = do
 
 -- | A data type for the different choices 
 data Selection = Small | Medium | Large
-  deriving (Eq, Show)
+  deriving Eq
 
 -- | Helper function to translate a Selection to an Text value containing a number
 translate :: Maybe Selection -> T.Text

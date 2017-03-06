@@ -99,7 +99,7 @@ Sometimes we will use functions.
 Events are the main work horses in Reflex. As we will see, it is very common to transform an event of type *a*
 into an event of type *b*. 
 
-The data type *Event* is an instance of the Haskell Functor type class. 
+The data type *Event* is an instance of the Haskell *Functor* type class. 
 This allows event transformation with the well known *fmap* function:
 
 ```fmap :: (a -> b) -> Event a -> Event b```
@@ -133,7 +133,7 @@ Dynamics are special to Reflex. They are a combination of the types *Behavior* a
 
 ![Behavior](https://github.com/hansroland/reflex-dom-inbits/raw/master/images//dynamic.png "Behavior")
 
-A Dynamic is a monad and therefore an Applicative too.
+The data type *Dynamic* is an instance of the Haskell *Applicative* type class.
 It is very common to use applicative syntax when working with Dynamics.
 
 # Before we really start coding...
@@ -863,6 +863,8 @@ instance Reflex t => Default (TextInputConfig t) where
                         , _textInputConfig_attributes = constDyn mempty }
 ~~~
 
+We will see more configuration records. They are all instances of the type class *Default*.
+
 ### Syntactic Sugar with (&) and (.~)
 
 *TextInputConfig* is a normal Haskell record structure with accessor functions. 
@@ -896,11 +898,12 @@ main = mainWidget bodyElement
 
 bodyElement :: MonadWidget t m => m ()
 bodyElement = el "div" $ do
+  el "h2" $ text "Simple Text Input"
   t <- textInput def
   dynText $ value t
 ~~~
 
-The next example in *src/textinput02.hs* shows how to use the different options to configure a TextInput widget.
+The next example in *src/textinput02.hs* shows how to use some different options to configure a TextInput widget.
 
 ~~~ { .haskell }
 {-# LANGUAGE OverloadedStrings #-}
@@ -1172,7 +1175,7 @@ bodyElement = do
 
 -- | A data type for the different choices 
 data Selection = Small | Medium | Large
-  deriving (Eq, Show)
+  deriving Eq
 
 -- | Helper function to translate a Selection to an Text value containing a number
 translate :: Maybe Selection -> T.Text
@@ -1188,11 +1191,124 @@ Comments
 * The type annotation in the line ```rbs :: HtmlWidget t (Maybe Selection) <- radioGroup ... ``` is not necessary. I added it, so I can immediately see the type.
 * Again we use applicative syntax to transform the *rbs* value to a dynamic text.
 * Again translating the Selection to our result string (the *business logic*) is done with a simple pure function!
+* Radio buttons from the contrib library are userfriendly: To check, you can either click on the small circle or on the label.
 
-## Drop Downs
+## Ranges
+
+Ranges allow the user to select a value, from a range of values or from a predefined set of values.
+
+Ranges again have a configuration with a Default instance and an element record.
+
+The configuration record:
 
 ~~~ { .haskell }
+data RangeInputConfig t
+   = RangeInputConfig { _rangeInputConfig_initialValue :: Float
+                      , _rangeInputConfig_setValue :: Event t Float
+                      , _rangeInputConfig_attributes :: Dynamic t (Map Text Text)
+                      }
+~~~
 
+The *Default* instance:
+
+~~~ { .haskell }
+instance Reflex t => Default (RangeInputConfig t) where
+  def = RangeInputConfig { _rangeInputConfig_initialValue = 0
+                        , _rangeInputConfig_setValue = never
+                        , _rangeInputConfig_attributes = constDyn mempty
+                        }
+~~~
+
+The element record:
+
+~~~ { .haskell }
+data RangeInput t
+   = RangeInput { _rangeInput_value :: Dynamic t Float
+                , _rangeInput_input :: Event t Float
+                , _rangeInput_mouseup :: Event t (Int, Int)
+                , _rangeInput_hasFocus :: Dynamic t Bool
+                , _rangeInput_element :: HTMLInputElement
+                }
+~~~
+
+The first example in *src/range01* uses default values for everything:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+import qualified Data.Text as T
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+    el "h2" $ text "Range Input"
+    rg <- rangeInput def
+    el "p" blank
+    display $ _rangeInput_value rg
+    return ()
+~~~
+
+As you can see, the default range goes from 0 to 100.
+
+The next example in *src/range02.hs* allows the user to select numers in the range of -100 to +100. 
+We have to set the minimum attribute to -100.
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+import qualified Data.Text as T
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+    el "h2" $ text "Range Input"
+    rg <- rangeInput $ def & attributes .~ constDyn ("min" =: "-100")
+    el "p" blank
+    display $ _rangeInput_value rg
+    return ()
+~~~
+
+In the next example from *src/range03.hs* we allow only numbers in steps from 10 from -100 to +100. 
+We add ticks above the values of -30, 0 and 50:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+
+import Data.Map
+import qualified Data.Text as T
+import Data.Monoid ((<>))
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+    el "h2" $ text "Range Input"
+    rg <- rangeInput $ def & attributes .~ constDyn 
+        ("min" =: "-100" <> "max" =: "100" <> "value" =: "0" <> "step" =: "10" <> "list" =: "powers" )
+    elAttr "datalist" ("id" =: "powers") $ do
+       elAttr "option" ("value" =: "0") blank
+       elAttr "option" ("value" =: "-30") blank
+       elAttr "option" ("value" =: "50") blank
+    el "p" blank
+    display $ _rangeInput_value rg
+    return ()
+~~~
+
+It generates the following HTML:
+
+~~~ { .html }
+<input type="range" min="-100" max="100" value="0" step="10" name="power" list="powers">
+<datalist id="powers">
+  <option value="0">
+  <option value="-30">
+  <option value="+50">
+</datalist>
 ~~~
 
 ## Listboxes
@@ -1268,13 +1384,13 @@ Everything is defined in the module [Reflex.Dom.Builder.Class.Events](https://gi
 * The data type *EventName* lists the possible event names.
 * The type family *EventResultType* defines the type of the resulting event.
 
-## Example
+## Example: *Disable / enable a Button*
 
 Why do we need this? In a lot of web shops you must check a checkbox to accept the business conditions like *low quality at high prices*.
 If you don't accept the conditions, the *order* button is disabled and you cannot order!
 We are now able to define the checkbox, the button and the logic to enable or disable the button.
 
-File *src/disableButton.hs* contains the code:
+File *src/button01.hs* contains the code:
 
 ~~~ { .haskell }
 {-# LANGUAGE OverloadedStrings #-}
@@ -1318,6 +1434,8 @@ The function *disaButton* contains the main logic. It takes a Dynamic Bool, whic
 the button should be enabled or disabled. 
 
 *ffor* is like *fmap* but with flipped parameters: ```ffor :: Functor f => f a -> (a -> b) -> f b```
+
+## Example: *A Button with an Icon*
 
 ## Radio Buttons Revisited
 
