@@ -133,8 +133,8 @@ Dynamics are special to Reflex. They are a combination of the types *Behavior* a
 
 ![Behavior](https://github.com/hansroland/reflex-dom-inbits/raw/master/images//dynamic.png "Behavior")
 
-A Dynamic is a monad and therefore an Applicative too. 
-When working with Dynamics it is very common to use applicative syntax.
+A Dynamic is a monad and therefore an Applicative too.
+It is very common to use applicative syntax when working with Dynamics.
 
 # Before we really start coding...
 
@@ -1078,9 +1078,116 @@ or at the text *Click me*
 
 ## Radio Buttons
 
-~~~ { .haskell }
+Unfortunately basic reflex-dom does not contain a simple predefined function to create radio buttons. 
+We will learn how to write our own radio button function later in the chapter *Defining your own events*.
 
+However there is a library [reflex-dom-contrib](https://github.com/reflex-frp/reflex-dom-contrib).
+
+This library also defines a configuration record and a widget record
+
+The configuration record is defined as:
+
+~~~ { .haskell }
+data WidgetConfig t a
+    = WidgetConfig { _widgetConfig_setValue :: Event t a
+                   , _widgetConfig_initialValue :: a
+                   , _widgetConfig_attributes :: Dynamic t (Map Text Text)
+                   }
 ~~~
+
+The widget record is defined as:
+
+~~~ { .haskell }
+data HtmlWidget t a = HtmlWidget
+    { _hwidget_value    :: Dynamic t a
+      -- ^ The authoritative value for this widget.
+    , _hwidget_change   :: Event t a
+      -- ^ Event that fires when the widget changes internally (not via a
+      -- setValue event).
+    , _hwidget_keypress :: Event t Int
+    , _hwidget_keydown  :: Event t Int
+    , _hwidget_keyup    :: Event t Int
+    , _hwidget_hasFocus :: Dynamic t Bool
+    }
+~~~
+
+From this library we use the function *radioGroup*:
+
+~~~ { .haskell }
+radioGroup :: (Eq a, ...) => Dynamic t T.Text -> Dynamic t [(a, T.Text)] -> GWidget t m (Maybe a)
+~~~
+
+Remember: In HTML a radio button in a list looks like:
+
+~~~ { .html }
+<li><input type="radio" name="size" value="Large">LARGE</li>
+~~~
+
+The first parameter of the function *radioGroup* is a Dynamic Text that is used to create the *name* attribute (*size* in the above HTML).
+We have to wrap a normal Text value into a Dynamic Text. The helper function *constDyn* does this for us, it takes an value of type ```a``` and returns a value of type ```Dynamic t a```
+
+~~~ { .haskell }
+constDyn :: Reflex t => a -> Dynamic t a
+~~~
+
+The second parameter of the function *radioGroup* takes a list of tuples. The left component of one tuple contains a value. 
+This value will be the payload of the event, that is fired when the radio button is clicked. 
+The type of this value must be an instance of the *Eq* type class.
+The right component of the tuple will be used as label of the radio button.
+
+The function *radioGroup* returns a value of type GWidget. The documentation for the  function *radioGroup* says:
+*Radio group in a 'GWidget' interface (function from 'WidgetConfig' to 'HtmlWidget' )*. 
+Hence we have to add a *WidgetConfig* value, that will be consumed by the resulting function of *radioGroup*
+
+The final result is of type *HtmlWidget* and we can 
+
+File *src/radio01.hs* shows the details
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+import           Reflex.Dom
+import           Reflex.Dom.Contrib.Widgets.Common
+import           Reflex.Dom.Contrib.Widgets.ButtonGroup
+import qualified Data.Text as T
+
+main :: IO ()
+main = mainWidget bodyElement
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+  el "h2" $ text "Radio Buttons from the Contrib Library"
+  rec
+    rbs :: HtmlWidget t (Maybe Selection) <- 
+       radioGroup 
+            (constDyn "size") 
+            (constDyn [(Small, "small"), (Medium, "Medium"), (Large, "LARGE")])
+            WidgetConfig { _widgetConfig_initialValue = Nothing
+                         , _widgetConfig_setValue     = never
+                         , _widgetConfig_attributes   = constDyn mempty}
+    text "Result: "
+    display (translate <$> _hwidget_value rbs)
+  return ()
+
+-- | A data type for the different choices 
+data Selection = Small | Medium | Large
+  deriving (Eq, Show)
+
+-- | Helper function to translate a Selection to an Text value containing a number
+translate :: Maybe Selection -> T.Text
+translate Nothing = "0"
+translate (Just Small) = "10"
+translate (Just Medium) = "50"
+translate (Just Large) = "800"
+~~~
+
+Comments
+
+* If you use the debugger or inspector of your web browser, you will see, that the function *radioGroup* does not pack the radio buttons into a HTML list. It packs them into a HTML table.
+* The type annotation in the line ```rbs :: HtmlWidget t (Maybe Selection) <- radioGroup ... ``` is not necessary. I added it, so I can immediately see the type.
+* Again we use applicative syntax to transform the *rbs* value to a dynamic text.
+* Again translating the Selection to our result string (the *business logic*) is done with a simple pure function!
 
 ## Drop Downs
 
@@ -1212,4 +1319,13 @@ the button should be enabled or disabled.
 
 *ffor* is like *fmap* but with flipped parameters: ```ffor :: Functor f => f a -> (a -> b) -> f b```
 
+## Radio Buttons Revisited
+
+# Making the Web Pages even more Dynamic
+
+# Modal Dialog Boxes
+
+# Timers
+
 # Communication with a Web Server
+
