@@ -53,7 +53,7 @@ With this trick, *getChar* is now a pure function.
 
 In Reflex the time parameter is always shown explicitely in the type declaration of the function.
 Normally a type parameter with the name *t* is used.
-However it's never necessary to supply this parameter as a programmer when you call the function.
+However it's **never** necessary to supply this parameter as a programmer when you call the function.
 
 Reflex has 3 main time-dependent data types:
 
@@ -555,9 +555,10 @@ mainWidgetWithCss :: ByteString ->
 Again it looks scary. The first parameter is a ByteString containing your css specifications.
 Normally you don't want to have the css specs embeded in your Haskell program. You want them in a separate file.
 
-On Hackage, there is a library called *file-embed*. 
+On Hackage, there is a library called *file-embed*.
 It contains a function *embedFile* that allows you, during compilation, to embed the contents of a file into your source code.
 This function uses Template Haskell, so we need the GHC language extension for Template Haskell.
+And we need an additional import (*Data.FileEmbed*).
 
 The second paramter of *mainWidgetWithCss* is just the same thing as the parameter of the function *mainWidget*, 
 we used for all our examples till now. So it is the HTML body element.
@@ -638,8 +639,8 @@ It is relative to the directory you run your program from.
 * If you run your program in the interactive shell with *ghcjs --interactive*, this example will not work. 
 The interactive shell of ghcjs does not serve any files.
 * It is possible, to specify other options in your header element.
-* Unfortunately you have to annotate the type ```:: MonadWidget t m => m ()``` for the functions *headElement* and *bodyElement*. 
-GHC is not able to infer these types and gives you a not so nice error message.
+* Unfortunately you have to annotate the type ```:: MonadWidget t m => m ()``` for the functions *headElement* and *bodyElement*. GHC is not able to infer these types and gives you a not so nice error message.
+* The *title* element in the header, will be used in the page tab of your browser.
 
 ## Summary
 
@@ -865,6 +866,18 @@ instance Reflex t => Default (TextInputConfig t) where
 
 We will see more configuration records. They are all instances of the type class *Default*.
 
+### The function *constDyn*
+
+Note the type of the _textInputConfig_attributes: It's ```Dynamic t (Map Text Text)```.
+To create a Dynamic map we can use the function *constDyn*: 
+It takes an value of type ```a``` and returns a value of type ```Dynamic t a```. 
+Of course, a Dynamic created with *contDyn* will not change while our program is running.
+
+
+~~~ { .haskell }
+constDyn :: Reflex t => a -> Dynamic t a
+~~~
+
 ### Syntactic Sugar with (&) and (.~)
 
 *TextInputConfig* is a normal Haskell record structure with accessor functions. 
@@ -899,9 +912,24 @@ main = mainWidget bodyElement
 bodyElement :: MonadWidget t m => m ()
 bodyElement = el "div" $ do
   el "h2" $ text "Simple Text Input"
-  t <- textInput def
-  dynText $ value t
+  ti <- textInput def
+  dynText $ value ti
 ~~~
+
+### The Type Class *HasValue*
+
+In the above example the value *ti* is of type *TextInput*. 
+The function *dynText* needs an parameter of type *Dynamic t Text*. 
+So the function *value* should have the type: ```value :: TextInput -> Dynamic t Text```.
+
+However, this is not quite true!  
+In the section about checkboxes you will see a function again called *value*. It will have the type: 
+```value :: Checkbox -> Dynamic t Bool``` .
+
+Reflex-dom uses advanced Haskell type level hackery to define this *value* function polymorphicly. For you it's simple:
+The function *value* normally does what you naturally expect! 
+Most of the predefined input widgets are instances of the type class *HasValue*. Hence most of these widgets
+support the *value* function. All of these *value* functions return *Dynamic* values.
 
 The next example in *src/textinput02.hs* shows how to use some different options to configure a TextInput widget.
 
@@ -1046,6 +1074,8 @@ checkedState True = "Checkbox is checked"
 checkedState _    = "Checkbox is not checked"
 ~~~
 
+As mentioned above, here the function *value* is used with the type signature: ```value :: Checkbox -> Dynamic t Bool``` .
+
 This is the most simple way to create and use a checkbox. However, you have to click exactly into 
 the small square to change the state of the checkbox. When you click at the label *Click me* it does not
 change it's state. This is very user unfriendly!
@@ -1127,11 +1157,7 @@ Remember: In HTML a radio button in a list looks like:
 ~~~
 
 The first parameter of the function *radioGroup* is a Dynamic Text that is used to create the *name* attribute (*size* in the above HTML).
-We have to wrap a normal Text value into a Dynamic Text. The helper function *constDyn* does this for us, it takes an value of type ```a``` and returns a value of type ```Dynamic t a```
 
-~~~ { .haskell }
-constDyn :: Reflex t => a -> Dynamic t a
-~~~
 
 The second parameter of the function *radioGroup* takes a list of tuples. The left component of one tuple contains a value. 
 This value will be the payload of the event, that is fired when the radio button is clicked. 
@@ -1142,7 +1168,7 @@ The function *radioGroup* returns a value of type GWidget. The documentation for
 *Radio group in a 'GWidget' interface (function from 'WidgetConfig' to 'HtmlWidget' )*. 
 Hence we have to add a *WidgetConfig* value, that will be consumed by the resulting function of *radioGroup*
 
-The final result is of type *HtmlWidget* and we can 
+The final result is of type *HtmlWidget*. 
 
 File *src/radio01.hs* shows the details
 
@@ -1188,14 +1214,101 @@ translate (Just Large) = "800"
 Comments
 
 * If you use the debugger or inspector of your web browser, you will see, that the function *radioGroup* does not pack the radio buttons into a HTML list. It packs them into a HTML table.
-* The type annotation in the line ```rbs :: HtmlWidget t (Maybe Selection) <- radioGroup ... ``` is not necessary. I added it, so I can immediately see the type.
+* The type annotation in the line ```rbs :: HtmlWidget t (Maybe Selection) <- radioGroup ... ``` is not necessary. I added it, so you can immediately see the type.
 * Again we use applicative syntax to transform the *rbs* value to a dynamic text.
 * Again translating the Selection to our result string (the *business logic*) is done with a simple pure function!
 * Radio buttons from the contrib library are userfriendly: To check, you can either click on the small circle or on the label.
 
+## DropDowns
+
+DropDown allow you to select items from a predefined list. Normally you only see the selected item. When you click on the little down array, the dropdown widget presents a list of possible values and you can choose one.
+
+DropDowns also have a configuration record that supports the *Default* instance and an element record:
+
+The configuration record:
+
+~~~ { .haskell }
+data DropdownConfig t k
+   = DropdownConfig { _dropdownConfig_setValue :: Event t k
+                    , _dropdownConfig_attributes :: Dynamic t (Map Text Text)
+                    }
+~~~
+
+The default instance:
+
+~~~ { .haskell }
+instance Reflex t => Default (DropdownConfig t k) where
+  def = DropdownConfig { _dropdownConfig_setValue = never
+                       , _dropdownConfig_attributes = constDyn mempty
+                       }
+~~~
+
+The element record:
+
+~~~ { .haskell }
+data Dropdown t k
+    = Dropdown { _dropdown_value :: Dynamic t k
+               , _dropdown_change :: Event t k
+               }
+~~~
+
+The *dropdown* function has the following type:
+
+~~~ { .haskell }
+dropdown :: (Ord k, ...) => k
+     -> Dynamic t (Map.Map k Text)
+     -> DropdownConfig t k
+     -> m (Dropdown t k)
+~~~
+
+Let's start with the second parameter: It's a map. The keys of type k of this map identify the values. 
+The *Text* values will be shown in the dropdown to the user. The values will be presented in the order of the keys.
+In the example below, the keys are of type *Int*.
+
+The first parameter is the key of the item, that is initially selected. In the example below it's the *2*. 
+Hence the dropdown shows *Switzerland*.
+
+The file *src/dropdown01.hs* has the example:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import           Reflex.Dom
+import qualified Data.Text as T
+import qualified Data.Map as Map
+import           Data.Monoid((<>))
+import           Data.Maybe (fromJust)extInpu
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = el "div" $ do
+  el "h2" $ text "Dropdown"
+  text "Select country "
+  dd <- dropdown 2 (constDyn countries) def
+  el "p" $ return ()
+  let selItem = result <$> value dd 
+  dynText selItem 
+
+countries :: Map.Map Int T.Text
+countries = Map.fromList [(1, "France"), (2, "Switzerland"), (3, "Germany"), (4, "Italy"), (5, "USA")]
+
+result :: Int -> T.Text
+result key = "You selected: " <> fromJust (Map.lookup key countries)
+~~~
+
+Let look at the line ```let selItem = result <$> value dd``` .
+In our example the expression *value dd* returns an element of the type *Int*  
+If the user chooses "Germany" this expression evaluates to *3*. This is the map-key of the selected item.
+So to print out the selected item, we have to look up this key in our map.
+
+If you use the function *dropdown* with a first parameter that is missing as key in the map of the second parameter,
+reflex will add a *(key,value)* pair with this missing key and an empty text string. Hence the use of *Map.lookup* 
+is not dangerous!
+
 ## Ranges
 
-Ranges allow the user to select a value, from a range of values or from a predefined set of values.
+Ranges allow the user to select a value from a range of values.
 
 Ranges again have a configuration with a Default instance and an element record.
 
@@ -1252,7 +1365,7 @@ bodyElement = do
 
 As you can see, the default range goes from 0 to 100.
 
-The next example in *src/range02.hs* allows the user to select numers in the range of -100 to +100. 
+The next example in *src/range02.hs* allows the user to select numbers in the range of -100 to +100. 
 We have to set the minimum attribute to -100.
 
 ~~~ { .haskell }
@@ -1271,6 +1384,8 @@ bodyElement = do
     display $ _rangeInput_value rg
     return ()
 ~~~
+
+*RangeInput* does not support the *HasValue* type class. Here we cannot use the *value* function!
 
 In the next example from *src/range03.hs* we allow only numbers in steps from 10 from -100 to +100. 
 We add ticks above the values of -30, 0 and 50:
@@ -1311,13 +1426,7 @@ It generates the following HTML:
 </datalist>
 ~~~
 
-## Listboxes
-
-~~~ { .haskell }
-
-~~~
-
-# Defining your own events
+# Defining your own Elements with Events
 
 ## The Function family *el'*, *elAttr'*, *elClass'*, *elDynAttr'*, *elDynClass'* 
 
@@ -1379,14 +1488,14 @@ Reflex-dom uses some advanced type hackery like TypeFamilies to create events of
 * ```domEvent Click e``` returns an event of type *()*
 * ```domEvent Mousedown e``` returns an event of type *(Int,Int)* with the mouse coordinates.
 
-Everything is defined in the module [Reflex.Dom.Builder.Class.Events](https://github.com/reflex-frp/reflex-dom/blob/develop/src/Reflex/Dom/Builder/Class/Events.hs):
+This is defined in the module [Reflex.Dom.Builder.Class.Events](https://github.com/reflex-frp/reflex-dom/blob/develop/src/Reflex/Dom/Builder/Class/Events.hs):
 
 * The data type *EventName* lists the possible event names.
 * The type family *EventResultType* defines the type of the resulting event.
 
 ## Example: *Disable / enable a Button*
 
-Why do we need this? In a lot of web shops you must check a checkbox to accept the business conditions like *low quality at high prices*.
+In a lot of web shops you must check a checkbox to accept the business conditions like *low quality at high prices*.
 If you don't accept the conditions, the *order* button is disabled and you cannot order!
 We are now able to define the checkbox, the button and the logic to enable or disable the button.
 
