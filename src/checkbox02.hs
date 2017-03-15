@@ -2,7 +2,11 @@
 import Reflex.Dom
 import qualified Data.Text as T
 
-main = mainWidget $ el "div" $ do
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = el "div" $ do
   el "h2" $ text "Checkbox - User friendly"
   cb <- el "label" $ do
     cb1 <- checkbox True def

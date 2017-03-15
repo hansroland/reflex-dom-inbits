@@ -194,7 +194,7 @@ From all the 1001 libraries stored on Hackage, we will use only very few:
 ```import Reflex.Dom``` 
 
 Ok this tutorial is about Reflex.Dom so we should import and use it. 
-It's not necessary to import Reflex. Reflex.Dom reexports all the needed functions of Reflex.
+It's not necessary to import Reflex. Reflex.Dom re-exports all the needed functions of Reflex.
 
 ```import qualified Data.Text as T```
 
@@ -203,12 +203,12 @@ So we have to import it!
 
 ```import qualified Data.Map as Map```
 
-Haskell Maps are very popular in *Reflex-dom*. They are used in a lot of functions.
+Haskell maps are very popular in *Reflex-dom*. They are used in a lot of functions.
 
 ```import Data.Monoid``` 
 
-We normally use the function *mempty* to create an empty Map, 
-and the function *mappend* rsp *(<>)* to combine two Maps.
+We normally use the function *mempty* to create an empty map, 
+and the function *mappend* rsp *(<>)* to combine two maps.
 
 
 ## Some comments to the code examples
@@ -1061,7 +1061,10 @@ import Reflex.Dom
 import qualified Data.Text as T
 
 main :: IO ()
-main = mainWidget $ el "div" $ do
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement =  el "div" $ do
   el "h2" $ text "Checkbox (Out of the box)"
   cb <- checkbox True def
   text "Click me"
@@ -1547,6 +1550,68 @@ the button should be enabled or disabled.
 ## Example: *A Button with an Icon*
 
 ## Radio Buttons Revisited
+
+We are now able to write our own function to create radio buttons. File *src/radio02.hs* has the code:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecursiveDo #-}
+import Reflex.Dom
+import qualified Data.Text as T
+import qualified Data.Map as Map
+import           Data.Monoid((<>))
+
+main :: IO ()
+main = mainWidget bodyElement 
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement =  el "div" $ do
+  rec
+    el "h2" $ text "Own Radio buttons"
+    let group = "g"
+    let dynAttrs = styleMap <$> dynColor
+    evRad1 <- radioBtn "orange" group Orange dynAttrs
+    evRad2 <- radioBtn "green" group Green dynAttrs
+    evRad3 <- radioBtn "red" group Red dynAttrs
+    let evRadio = (T.pack . show) <$> leftmost [evRad1, evRad2, evRad3]
+    dynColor <- holdDyn "lightgrey" evRadio
+  return ()
+
+data Color = White | Red | Orange | Green
+  deriving (Eq, Ord, Show)
+
+-- | Helper function to create a radio button
+radioBtn :: (Eq a, Show a, MonadWidget t m) => T.Text -> T.Text -> a -> Dynamic t (Map.Map T.Text T.Text)-> m (Event t a)
+radioBtn label group rid dynAttrs = do
+    el "br" blank 
+    ev <- elDynAttr "label" dynAttrs $ do
+        (rb1, _) <- elAttr' "input" ("name" =: group <> "type" =: "radio" <> "value" =: T.pack (show rid))  blank
+        text label
+        return $ domEvent Click rb1
+    return $ rid <$ ev
+
+styleMap :: T.Text -> Map.Map T.Text T.Text
+styleMap c = "style" =: ("background-color: " <> c)
+~~~
+
+Comments:
+
+* The function *radioBtn* contains the logic to create a radio button. 
+* Like the previos radio button example with the function *radioGroup* from the *contrib* library, It uses an user defined datatype as paylod for the click event.
+* Maybe you want to add an additonal Boolean parameter to specify whether a radio button is checked.
+* Similar to the checkbox example, these radio buttons are userfriendly. 
+* Depending on the checked radio button, the background color of the whole radio button changes.
+* This is an other example of event transformation.
+* We use the reflex function *holdDyn* to create a Dynamic value. I described it just below:
+
+### The Function *holdDyn*
+
+The function *holdDyn* has the following type: 
+
+```holdDyn :: (...) => a -> Event t a -> m (Dynamic t a)```
+
+It converts an Event with a payload of type *a* into a Dynamic with the same value. 
+We have to specify a default value, to be used before the first event occurs.
 
 # Making the Web Pages even more Dynamic
 
