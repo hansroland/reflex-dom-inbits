@@ -1315,7 +1315,7 @@ result key = "You selected: " <> fromJust (Map.lookup key countries)
 Let's look at the line ```let selItem = result <$> value dd``` .
 In our example the expression *value dd* returns an element of the type *Int*.
 If the user chooses "Germany" this expression evaluates to *3*. This is the map-key of the selected item.
-So to print out the selected item, we have to look up this key in our map.
+To print out the selected item, we use the function *result* to look up this key in our map.
 
 If you use the function *dropdown* with a first parameter that is missing as key in the map of the second parameter,
 reflex will add a *(key,value)* pair with this missing key and an empty text string. Hence the use of *Map.lookup* 
@@ -1623,3 +1623,51 @@ The function *holdDyn* has the following type:
 
 It converts an Event with a payload of type *a* into a Dynamic with the same value. 
 We have to specify a default value, to be used before the first event occurs.
+
+# Timers
+
+A timer will send you always an event after a predefined amount of time has expired. Reflex-dom has two timer functions *tickLossy* and *tickLossyFrom*. The function *tickLossyFrom* is used only in applications where you need several parallel timers. Normally you will use *tickLossy*. It will start sending events immediately after the startup of your application. It has the following type
+
+```tickLossy :: (...) => NominalDiffTime -> UTCTime -> m (Event t TickInfo)```
+
+The types *NominalDiffTime* and *UTCTime* are defined in the basic GHC library *time*. To use them, we need to import Data.Time.
+
+The first parameter *NominalDiffTime* is the length of the time interval between two events. It is measured in seconds. The second parameter is an UTCTime. I never really found out what it's used for.
+You can give an arbitrary data-time field. Normally I use current time.
+
+The result is a series of Events. Their paylod is the data structure *TickInfo*:
+
+~~~ { .haskell }
+data TickInfo
+  = TickInfo { _tickInfo_lastUTC :: UTCTime
+             -- ^ UTC time immediately after the last tick.
+             , _tickInfo_n :: Integer
+             -- ^ Number of time periods since t0
+             , _tickInfo_alreadyElapsed :: NominalDiffTime
+             -- ^ Amount of time already elapsed in the current tick period.
+             }
+~~~ 
+
+Both functions *tickLossy* and *tickLossyFrom* have the term *lossy* in their name:
+If the system starts running behind, occurrences of events will be dropped rather than buffered.
+
+A simple example is in the file *src/timer01.hs*:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import           Reflex.Dom
+import           Data.Time
+import           Control.Monad.Trans (liftIO)
+import qualified Data.Text as T
+
+main :: IO ()
+main = mainWidget bodyElement
+
+bodyElement :: MonadWidget t m =>  m()
+bodyElement = do
+  el "h2" $ text "A Simple Clock"
+  now <- liftIO getCurrentTime
+  evTick <- tickLossy 1 now
+  let evTime = (T.pack . show . _tickInfo_lastUTC) <$>  evTick
+  dynText =<< holdDyn "No ticks yet" evTime
+~~~
