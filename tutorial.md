@@ -1671,3 +1671,177 @@ bodyElement = do
   let evTime = (T.pack . show . _tickInfo_lastUTC) <$>  evTick
   dynText =<< holdDyn "No ticks yet" evTime
 ~~~
+
+# Server Requests
+
+In the next examples we will send requests to a Web server and process the responses in reflex-dom. 
+
+Note: **The following examples run only in the browser, but not in WebkitGtk.** There are some security issues with the *same-origin security policy* and with *cross-origin resource sharing* (CORS). Please inform me, if you know how to overcome this issue.
+
+## Functions and Data Structures to Send Requests and Receive Responses
+
+### Requests
+
+To send a request we need a data structure called XhrRequest
+
+~~~ { .haskell }
+data XhrRequest a
+   = XhrRequest { _xhrRequest_method :: Text
+                , _xhrRequest_url :: Text
+                , _xhrRequest_config :: XhrRequestConfig a
+                }
+   deriving (Show, Read, Eq, Ord, Typeable, Functor)
+~~~
+
+Again this needs a configuration record:
+
+~~~ { .haskell }
+data XhrRequestConfig a
+   = XhrRequestConfig { _xhrRequestConfig_headers :: Map Text Text
+                      , _xhrRequestConfig_user :: Maybe Text
+                      , _xhrRequestConfig_password :: Maybe Text
+                      , _xhrRequestConfig_responseType :: Maybe XhrResponseType
+                      , _xhrRequestConfig_sendData :: a
+                      , _xhrRequestConfig_withCredentials :: Bool
+                      , _xhrRequestConfig_responseHeaders :: XhrResponseHeaders
+                      }
+   deriving (Show, Read, Eq, Ord, Typeable, Functor)
+~~~
+
+and again this configuration record is an instance of the type class *Default*
+
+~~~ { .haskell }
+instance a ~ () => Default (XhrRequestConfig a) where
+  def = XhrRequestConfig { _xhrRequestConfig_headers = Map.empty
+                         , _xhrRequestConfig_user = Nothing
+                         , _xhrRequestConfig_password  = Nothing
+                         , _xhrRequestConfig_responseType  = Nothing
+                         , _xhrRequestConfig_sendData  = ()
+                         , _xhrRequestConfig_withCredentials = False
+                         , _xhrRequestConfig_responseHeaders = def
+                         }
+~~~
+
+### Functions *performRequestAsync* and *performRequestAsyncWithError*
+
+To send a request to the server, we use the function
+
+```performRequestAsync :: (...) => Event t (XhrRequest a) -> m (Event t XhrResponse)```
+
+So we have to pack a XhrRequest into an Event. Of course w'll again use event transfomation to accomplish this.
+Sending the request does not block our reflex-dom frontend. When the response arrives from the server, we just get an 'Event t XhrRespone'
+
+The data type XhrResponse is defined as:
+
+~~~ { .haskell }
+data XhrResponse
+   = XhrResponse { _xhrResponse_status :: Word
+                 , _xhrResponse_statusText :: Text
+                 , _xhrResponse_response :: Maybe XhrResponseBody
+                 , _xhrResponse_responseText :: Maybe Text
+                 , _xhrResponse_headers :: Map Text Text
+                 }
+   deriving (Typeable)
+~~~
+
+The type *XhrResponseBody* is defined as:
+
+~~~ { .haskell }
+data XhrResponseBody = XhrResponseBody_Default Text
+                     | XhrResponseBody_Text Text
+                     | XhrResponseBody_Blob Blob
+                     | XhrResponseBody_ArrayBuffer ByteString
+    deriving (Eq)
+~~~
+
+If you want to write rock solid software, you should use the function *performRequestAsyncWithError* instead of *performRequestAsync*.
+It has the following type: 
+
+```performRequestAsyncWithError :: (...) => Event t (XhrRequest a) -> m (Event t (Either XhrException XhrResponse))```
+
+In case of error you get back a XhrException value. It's defined like:
+
+~~~ { .haskell }
+data XhrException = XhrException_Error
+                  | XhrException_Aborted
+     deriving (Show, Read, Eq, Ord, Typeable)
+~~~
+
+To keep my examples small, I'll only use *performRequestAsync*.
+
+### Function *tagPromptlyDyn*
+
+If we have a TextInput field with some data (eg a name or a credit card number), this data normally lives in a *Dynamic*. To send this data to the server, we have to *lift* it into an Event. The function *tagPromptlyDyn* will exactly do this. It has the type: 
+
+```tagPromptlyDyn :: Reflex t => Dynamic t a -> Event t b -> Event t a```
+
+When the *Event t b* occurs, it creates a new event with the payload of the Dynamic value.
+
+### Function *getPostBuild*
+
+This is a little helper function we use in the next example. It has the type: 
+
+```getPostBuild :: PostBuild t m => m (Event t ())```
+
+It generates a single event at the time the HTML page ha been created. It's similar to the HTML *onload*.
+
+
+## Swiss Weather Data
+
+As an example server w'll use a Web service, that returns the measuement data of the last 10 minutes of automatic weather stations. This Web service has some advantages:
+
+* You can just use this service. It's not necessary to register with your e-mail address.
+* It's very simple: There are only 2 different requests and responses.
+* It returns the data in JSON format.
+
+For the first example we use a dropdown with a fixed list of stations:
+
+* Bern the captal: [http://www.bern.com/en](http://www.bern.com/en)
+* Zurich, the main city: [https://www.zuerich.com/en](https://www.zuerich.com/en)
+* Jungfraujoch, called *Top of Europe* with 3454 meters above sea level really high in the Swiss mountains [https://www.jungfrau.ch/en-gb/](https://www.jungfrau.ch/en-gb/)
+* Zermatt, the world fameous mountain resort at the bottom of the Matterhorn: [http://www.zermatt.ch/en](http://www.zermatt.ch/en)
+* Binn, a small and very lovely mountain village, far off mainstream tourism: [http://www.landschaftspark-binntal.ch/en/meta/fotogalerie.php](http://www.landschaftspark-binntal.ch/en/meta/fotogalerie.php)
+
+Every weather station has a 3-letter code eg "BER" for Bern. We send this 3-letter code to the server and it returns a JSON string wih the measured data. To start, we just show this JSON string as it is, withour any nice formatting.
+
+The code is in the file *src/xhr01.hs*:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import           Reflex.Dom
+import qualified Data.Text as T
+import qualified Data.Map as Map
+import           Data.Maybe (fromMaybe)
+import           Data.Monoid ((<>))
+
+main :: IO ()
+main = mainWidget body
+
+body :: MonadWidget t m => m ()
+body  = el "div" $ do
+  el "h2" $ text "Swiss Weather Data (raw version)"
+  text "Choose station: "
+  dd <- dropdown "BER" (constDyn stations) def
+  -- Build and send the request
+  evStart <- getPostBuild
+  let evCode = tagPromptlyDyn (value dd) $ leftmost [ () <$ _dropdown_change dd, evStart]
+  evRsp <- performRequestAsync $ buildReq <$> evCode
+  -- Display the whole response
+  el "h5" $ text "Response Text:"
+  let evResult = (fromMaybe "" . _xhrResponse_responseText) <$> evRsp
+  dynText =<< holdDyn "" evResult
+  return ()
+
+buildReq :: T.Text -> XhrRequest ()
+buildReq code = XhrRequest "GET" ("http://opendata.netcetera.com:80/smn/smn/" <> code) def
+
+stations :: Map.Map T.Text T.Text
+stations = Map.fromList [("BIN", "Binn"), ("BER", "Bern"), ("KLO", "Zurich airport"), ("ZER", "Zermatt"), ("JUN", "Jungfraujoch")]
+~~~
+
+Comments:
+
+* We use *tagPromptlyDyn* to lift the 3-letter code from the dropdown into an Event.
+* We then use this event to create a new event with the XhrRequest.
+* With the function *performRequestAsync* we send this XhrRequest to the server. 
+* We send a request immediately after startup and every time the value of the dropdown changes.

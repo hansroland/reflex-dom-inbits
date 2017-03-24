@@ -13,7 +13,7 @@ bodyElement = el "div" $ do
   el "h2" $ text "Dropdown"
   text "Select country "
   dd <- dropdown 2 (constDyn countries) def
-  el "p" $ return ()
+  el "p" blank
   let selItem = result <$> value dd 
   dynText selItem 
 
