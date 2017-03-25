@@ -1,6 +1,6 @@
-# reflex-dom-inbits
+# reflex-dom-inbits - A step by step tutorial for reflex-dom
 
-This is a beginner-friendly tutorial. It shows how to write Haskell programs  with a graphical user interface using *reflex-dom*.
+This is a beginner-friendly tutorial for *reflex-dom*. It shows how to write Haskell programs  with a graphical user interface.
 It contains an introductionary text and examples in short bits.
 
 Reflex-Dom is a library to create Haskell applications with a Graphical User Interface (GUI).
@@ -15,6 +15,4 @@ With Reflex-Dom you can write GUI applications in Haskell without understanding 
 *State Monad* or *Monad Transformers*. You need also a basic background on *HTML* and 
 on *Cascaded Style Sheets* (*CSS*). Of course, the more experience you have, the easier it is.
 
-Start by reading the file [tutorial.md](tutorial.md)
-
-This tutorial is work in progres, it's not yet complete! I'll add more text with more examples in the near future.
+Start by reading the file [tutorial.md](tutorial.md).
