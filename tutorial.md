@@ -1,4 +1,4 @@
-# Writing GUI Programs in Haskell - A Beginner Friendly Tutorial using reflex-dom
+# A Beginner-friendly Step by Step Tutorial for Reflex-Dom
 
 This is a beginner-friendly tutorial. It shows how to write Haskell programs  with a graphical user interface using reflex-dom. 
 
@@ -15,7 +15,7 @@ Conal Elliott and Paul Hudak first developed the basic ideas and published them 
 On Hackage you can find a lot
 of different FRP libraries, eg *elera*, *frpnow*, *grapefruit-frp*, *netwire*, *reactive-banana*, *reflex* and many more.
 
-In this tuorial we use Reflex and Reflex-Dom. Reflex is a FRP implemetation written by Ryan Trinkle.
+In this tutorial we use *reflex* and *reflex-dom*. Reflex is a FRP implementation written by Ryan Trinkle from [Obsidian](https://obsidian.systems/).
 Reflex is a strong foundation to handle events and values that change over time. 
 Reflex-Dom is built on Reflex and on GHCJS.Dom. It allows you to write GUI programs that run in a 
 Web Browser or as a 'native' application in WebkitGtk. Reflex-Dom was written by Ryan Trinkle too.
@@ -153,6 +153,8 @@ The last 2 changes make the programs much simpler!
 
 In this tutorial, we will use the newer library versions reflex-dom-0.4 and reflex-0.5 from Github. 
 Unfortunately most of the examples will not compile with reflex-dom-0.3!
+
+If you used the *reflex-platform* to install reflex and reflex-dom, you will have the newer versions. 
  
 
 ## Popular Language Extensions
@@ -212,7 +214,7 @@ and the function *mappend* rsp *(<>)* to combine two maps.
 
 Rarely we will use other libraries, eg
 
-* import Data.FileEmbed  - library *file-embed* on Hackage
+* import Data.FileEmbed  - library *file-embed* on Hackage and installed by reflex-platform.
 * import Data.Text.Encoding - will be installed with reflex-dom
 * import Data.Maybe - part of base
 * import Data.Time - part of base
