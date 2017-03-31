@@ -1413,7 +1413,8 @@ bodyElement = do
     return ()
 ~~~
 
-*RangeInput* does not support the *HasValue* type class. Here we cannot use the *value* function!
+Depending on your version of *RangeInput*, it does not support the *HasValue* type class. The  *HasValue* class was added end of March 2017. 
+If your version is older, you cannot use the *value* function. However in all versions you can use the *_rangeInput_value* function!
 
 The next example from *src/range03.hs* allows only numbers from -100 to +100 in steps from 10.
 We add ticks above the values of -30, 0 and 50:
