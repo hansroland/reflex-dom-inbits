@@ -1,0 +1,24 @@
+ul.tab  {
+  background-color: lightgrey;
+}
+
+/* Float the list items side by side */
+ul.tab li {float: left;
+   width: 90px;
+   border: 1px solid #ccc;
+   padding: 10;
+}
+
+/* Style the list */
+ul.tab {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+/* Create an active/current tablink class */
+ul li.tabact {
+  background-color: white;
+}

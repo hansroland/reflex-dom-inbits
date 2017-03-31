@@ -210,6 +210,16 @@ We normally use the function *mempty* to create an empty map,
 the function (=:) to create a singelton map
 and the function *mappend* rsp *(<>)* to combine two maps.
 
+Rarely we will use other libraries, eg
+
+* import Data.FileEmbed  - library *file-embed* on Hackage
+* import Data.Text.Encoding - will be installed with reflex-dom
+* import Data.Maybe - part of base
+* import Data.Time - part of base
+* import Reflex.Dom.Contrib.Widgets - from [https://github.com/reflex-frp/reflex-dom-contrib](https://github.com/reflex-frp/reflex-dom-contrib)
+* import Control.Monad.Trans - part of base
+* import Data.Meteo.Swiss - from [https://github.com/hansroland/opench/tree/master/meteo](https://github.com/hansroland/opench/tree/master/meteo)
+
 
 ## Some comments to the code examples
 
@@ -1842,6 +1852,164 @@ stations = Map.fromList [("BIN", "Binn"), ("BER", "Bern"), ("KLO", "Zurich airpo
 Comments:
 
 * We use *tagPromptlyDyn* to lift the 3-letter code from the dropdown into an Event.
-* We then use this event to create a new event with the XhrRequest.
+* Then we use this event to create a new event with the XhrRequest.
 * With the function *performRequestAsync* we send this XhrRequest to the server. 
 * We send a request immediately after startup and every time the value of the dropdown changes.
+* At the time of this writing, the station *Binn* is not operational. The server returns a code of 204 in the *_xhrResponse_status* field.
+
+## Function *decodeXhrResponse*: Parsing the JSON String
+
+To parse the JSON string we use the popular *aeson* library. We need a data structure that corresponds to the JSON string. 
+
+For the Swiss weather data you can find the Haskell definitons and the instances of the *FromJSON* type class in the library *opench-meteo*. 
+
+You can find this library on [https://github.com/hansroland/opench/tree/master/meteo]().
+
+We need to import this library: ```import Data.Meteo.Swiss```.
+
+The function *decodeXhrResponse* converts the response returned by the *performRequestAsync* function to your data type. It has the type:
+
+```decodeXhrResponse :: FromJSON a =>  XhrResponse -> Maybe a```
+
+However sometimes you have to give a little bit help to the compiler. The compiler must know the target data type for the 
+*decodeXhrResponse* function. In our case we want back a *Event t SmnRecord*. So we write:
+
+```evSmnRec :: (Event t SmnRecord) <- return $  fmapMaybe decodeXhrResponse evRsp```
+
+Note: In our situation the scoped type varaible is not really necessary, beause we nicely type annoteted all functions.
+However in a lot of situations you may have to give help to the compiler.
+
+The function *decodeXhrResponse* returns a *Maybe (Event t SmnRecord)*. Again we are sloppy and ignore error handling.
+Therefore we use *fmapMaybe*. 
+
+## Function *tabDisplay*: Display the data on a tabbed page
+
+Now we need to present the data to the user. We have 2 types of data:
+
+* The Weather Data *SmnRecord*
+* The Station Record *SmnStation*
+
+An event with the SmnRecord we get back from the decodeXhrResponse. An event with the SmnStation record we create with normal event transformation.
+
+```let evSmnStat = fmapMaybe smnStation evSmnRec``` 
+
+For each of these data records we will have an own tab on the page. For this we use the function *tabDisplay*.
+It has the following type:
+
+```tabDisplay :: (...) => T.Text -> T.Text -> Map.Map k (T.Text, m ()) -> m ()```
+
+Instead of real tabs it creates a ``` <ul> / <li> ``` HTML list. We then use CSS to transform this list into nice tab headers.
+
+The first *Text* parameter is the CSS class applied to the ```<ul>``` HTML element.   
+The second *Text* parameter is the CSS class applied to the currently active ```<li>``` element. 
+The third parameter is a Map from a key *k* to a pair *(T.Text, m ()) -> m ())*. The first component *Text* is the label for the tab header and the function *m ()) -> m ()* in the second component is the function to create the tab data.
+The data type for the key *k* must be an instance of the Haskell type class *Ord*. The tabs  will be ordered by the values of *k*.
+
+We need some CSS, so we add ```{-# LANGUAGE TemplateHaskell #-}``` to our list of GHC language exensions and we add
+```import Data.FileEmbed``` to our import list and use *mainWidgetWithCss* as our main function.
+
+To create the tab display we now use: 
+
+~~~ { .haskell }
+tabDisplay "tab" "tabact" $ tabMap evSmnRec evSmnStat 
+
+-- | Create a tabbed display
+tabMap :: MonadWidget t m => Event t SmnRecord -> Event t SmnStation -> Map.Map Int (T.Text, m ())
+tabMap evMeteo evStat = Map.fromList[ (1, ("Station", tabStat evStat)),
+            (2, ("MeteoData", tabMeteo evMeteo))]
+~~~
+
+We need two functions *tabStat* and *tabMeteo* to display the data:
+
+~~~ { .haskell }
+-- | Create the DOM elements for the Station tab
+tabStat :: MonadWidget t m => Event t SmnStation -> m ()
+tabStat evStat = do 
+  dispStatField "Code" staCode evStat
+  dispStatField "Name" staName evStat
+  dispStatField "Y-Coord" (tShow . staCh1903Y) evStat
+  dispStatField "X-Coord" (tShow . staCh1903X) evStat
+  dispStatField "Elevation" (tShow . staElevation) evStat
+  return ()
+
+-- | Create the DOM elements for the Meteo data tab
+tabMeteo :: MonadWidget t m => Event t SmnRecord -> m ()
+tabMeteo evMeteo = do 
+  dispMeteoField "Date/Time" (tShow . smnDateTime) evMeteo
+  dispMeteoField "Temperature" smnTemperature evMeteo
+  dispMeteoField "Sunnshine" smnSunshine evMeteo
+  dispMeteoField "Precipitation" smnPrecipitation evMeteo
+  dispMeteoField "Wind Direction" smnWindDirection evMeteo
+  dispMeteoField "Wind Speed" smnWindSpeed evMeteo
+  return ()
+~~~
+
+And again two functions  *dispStatField* and *dispStatField* to display the single fields.
+We also need a little helper function to nicely display non text values wrapped in a Maybe.
+
+~~~ { .haskell }
+-- Display a single field from the SmnStation record
+dispStatField :: MonadWidget t m => T.Text -> (SmnStation -> T.Text) -> Event t SmnStation -> m ()
+dispStatField label rend evStat = do
+  el "br" blank
+  text $ label <> ": "
+  dynText =<< holdDyn "" (fmap rend evStat)
+  return ()
+
+-- Display a single field from the SmnRecord record
+dispMeteoField :: MonadWidget t m => T.Text -> (SmnRecord -> T.Text) -> Event t SmnRecord -> m ()
+dispMeteoField label rend evRec = do
+  el "br"blank
+  text $ label <> ": "
+  dynText =<< holdDyn "" (fmap rend evRec)
+  return ()
+
+-- | Small helper function to convert showable values wrapped in Maybe to T.Text. 
+-- You should use the test-show library from Hackage!! 
+tShow :: Show a => Maybe a -> T.Text
+tShow Nothing = ""
+tShow (Just x) = (T.pack . show) x
+~~~
+
+Note: With the function *tabDisplay* the number of tabs is fix. You cannot change it during run time. 
+
+## Handling the Error case
+
+We still have the situation, that the *Binn* weather station does not return any data. 
+We now want to give an error message for this.
+First we check the HTTP status fo our response and store it in a *Dynamic* value:
+
+~~~ { .haskell }
+  -- Check on html response code 200
+  dynOk <- holdDyn False $ (\rsp -> _xhrResponse_status rsp == 200)  <$> evRsp
+~~~
+
+Ok in a prefessional environnment you would replace the hardcoded number *200* with a nice constant.
+
+Then we create an attribute map to make the tab display "visible" or "inivisble" depending wether the *dynOk" value is *True* or *False*.
+In a last step, we attach this attribute map to a *div* HTML element containing our tab element. 
+
+~~~ { .haskell }
+  let dynAttrVisData = visible <$> dynOk
+  elDynAttr "div" dynAttrVisData $
+    tabDisplay "tab" "tabact" $ tabMap evSmnRec evSmnStat
+
+-- | Helper function to create a dynamic attribute map for the visibility of an element
+visible :: Bool -> Map.Map T.Text T.Text
+visible b = "style" =: ("display: " <> choose b "inline" "none")
+  where 
+    choose True  t _ = t
+    choose False _ f = f
+~~~
+
+Similar, we create a little HTML element for the error case and show it only if our *dynOk* value is *False*:
+
+~~~ { .haskell }
+  -- Show error msg
+  let dynAttrVisError = (visible . not) <$> dynOk
+  elDynAttr "div" dynAttrVisError $ do 
+     el "h3" $ text "Error"
+     dynText =<< holdDyn "" (_xhrResponse_statusText <$> evRsp)
+~~~
+
+I'll not reproduce the whole code here. You can find it in the file *src/xhr02.hs*.

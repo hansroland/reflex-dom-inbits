@@ -18,40 +18,40 @@ body  = el "div" $ do
   el "h2" $ text "Swiss Weather Data (Tab display)"
   text "Choose station: "
   dd <- dropdown "BER" (constDyn stations) def
+  el "p" blank
   -- Build and send the request
   evStart <- getPostBuild
   let evCode = tagPromptlyDyn (value dd) $ leftmost [ () <$ _dropdown_change dd, evStart]
   evRsp <- performRequestAsync $ buildReq <$> evCode
-  -- Show error msg
-  dynError <- holdDyn False $ (\rsp -> _xhrResponse_status rsp /= 200)  <$> evRsp
-  let dynAttrVisError = visible <$> dynError
-  elDynAttr "div" dynAttrVisError $ do 
-     el "h3" $ text "Error"
-     dynText =<< (holdDyn "" $ _xhrResponse_statusText <$> evRsp)
+  -- Check on html response code 200
+  dynOk <- holdDyn False $ (\rsp -> _xhrResponse_status rsp == 200)  <$> evRsp
   -- Show a tabbed tabDisplay
   evSmnRec :: (Event t SmnRecord) <- return $  fmapMaybe decodeXhrResponse evRsp
   let evSmnStat = fmapMaybe smnStation evSmnRec
-  let dynAttrVisData = (visible . not) <$> dynError
-  elDynAttr "div" dynAttrVisData $ do
-    el "p" blank
+  let dynAttrVisData = visible <$> dynOk
+  elDynAttr "div" dynAttrVisData $
     tabDisplay "tab" "tabact" $ tabMap evSmnRec evSmnStat
+  -- Show error msg
+  let dynAttrVisError = (visible . not) <$> dynOk
+  elDynAttr "div" dynAttrVisError $ do 
+     el "h3" $ text "Error"
+     dynText =<< holdDyn "" (_xhrResponse_statusText <$> evRsp)
   return ()
 
 buildReq :: T.Text -> XhrRequest ()
-buildReq code = XhrRequest "GET" ("http://opendata.netcetera.com:80/smn/smn/" <> code) def
+buildReq code = XhrRequest "GET" (urlDataStat code) def
 
 stations :: Map.Map T.Text T.Text
 stations = Map.fromList [("BIN", "Binn"), ("BER", "Bern"), ("KLO", "Zurich airport"), ("ZER", "Zermatt"), ("JUN", "Jungfraujoch")]
 
 -- | Create a tabbed display
 tabMap :: MonadWidget t m => Event t SmnRecord -> Event t SmnStation -> Map.Map Int (T.Text, m ())
-tabMap evRec evStat = Map.fromList[ (1, ("Station", tabStat evStat)),
-            (2, ("MeteoData", tabRec evRec))]
+tabMap evMeteo evStat = Map.fromList[ (1, ("Station", tabStat evStat)),
+            (2, ("MeteoData", tabMeteo evMeteo))]
 
 -- | Create the DOM elements for the Station tab
 tabStat :: MonadWidget t m => Event t SmnStation -> m ()
 tabStat evStat = do 
-  el "h3" $ text "Station"
   dispStatField "Code" staCode evStat
   dispStatField "Name" staName evStat
   dispStatField "Y-Coord" (tShow . staCh1903Y) evStat
@@ -59,16 +59,15 @@ tabStat evStat = do
   dispStatField "Elevation" (tShow . staElevation) evStat
   return ()
 
--- | Create the DOM elements for the Data tab
-tabRec :: MonadWidget t m => Event t SmnRecord -> m ()
-tabRec evRec = do 
-  el "h3" $ text "Meteo Data"
-  dispRecField "Date/Time" (tShow . smnDateTime) evRec
-  dispRecField "Temperature" smnTemperature evRec
-  dispRecField "Sunnshine" smnSunshine evRec
-  dispRecField "Precipitation" smnPrecipitation evRec
-  dispRecField "Wind Direction" smnWindDirection evRec
-  dispRecField "Wind Speed" smnWindSpeed evRec
+-- | Create the DOM elements for the Meteo data tab
+tabMeteo :: MonadWidget t m => Event t SmnRecord -> m ()
+tabMeteo evMeteo = do 
+  dispMeteoField "Date/Time" (tShow . smnDateTime) evMeteo
+  dispMeteoField "Temperature" smnTemperature evMeteo
+  dispMeteoField "Sunnshine" smnSunshine evMeteo
+  dispMeteoField "Precipitation" smnPrecipitation evMeteo
+  dispMeteoField "Wind Direction" smnWindDirection evMeteo
+  dispMeteoField "Wind Speed" smnWindSpeed evMeteo
   return ()
 
 -- Display a single field from the SmnStation record
@@ -80,14 +79,14 @@ dispStatField label rend evStat = do
   return ()
 
 -- Display a single field from the SmnRecord record
-dispRecField :: MonadWidget t m => T.Text -> (SmnRecord -> T.Text) -> Event t SmnRecord -> m ()
-dispRecField label rend evRec = do
+dispMeteoField :: MonadWidget t m => T.Text -> (SmnRecord -> T.Text) -> Event t SmnRecord -> m ()
+dispMeteoField label rend evRec = do
   el "br"blank
   text $ label <> ": "
   dynText =<< holdDyn "" (fmap rend evRec)
   return ()
 
--- | Small helper function to convert showable values to T.Text. 
+-- | Small helper function to convert showable values wrapped in Maybe to T.Text. 
 -- You should use the test-show library from Hackage!! 
 tShow :: Show a => Maybe a -> T.Text
 tShow Nothing = ""
@@ -96,7 +95,6 @@ tShow (Just x) = (T.pack . show) x
 -- | Helper function to create a dynamic attribute map for the visibility of an element
 visible :: Bool -> Map.Map T.Text T.Text
 visible b = "style" =: ("display: " <> choose b "inline" "none")
--- visible b = "style" =: ("visibility: " <> choose b "visible" "invisible")
   where 
     choose True  t _ = t
     choose False _ f = f
