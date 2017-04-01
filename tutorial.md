@@ -1053,8 +1053,8 @@ As soon as you change the value in one of the TextInput fields, the background c
 Comments:
 
 * The function *labledBox* combines a TextInput field with a label.
-* The main magic happens in the line ```styleMap <$> value dfsRed <*> value dfsGreen <*> value dfsBlue```. 
-We use again applicative syntax to call the function *styleMap* with the current values of our 3 input fields.
+* The interesting thing happens in the line ```styleMap <$> value dfsRed <*> value dfsGreen <*> value dfsBlue```. 
+We again use applicative syntax to call the function *styleMap* with the current values of our 3 input fields.
 * The function styleMap contains our 'business logic'. It creates the correct string to color the resulting TextArea widget.
 * The function *styleMap* is again a normal, simple, pure Haskell function! 
 * The example shows, how to process the input of several TextInput fields
@@ -2026,3 +2026,40 @@ Similar, we create a little HTML element for the error case and show it only if 
 ~~~
 
 I'll not reproduce the whole code here. You can find it in the file *src/xhr02.hs*.
+
+# Appendix - References to Reflex-Dom Resources on the Internet
+
+## Talks / Videos
+
+* Ryan Trinkle: Reflex - Practical Functional Reactive Programming, NYC Haskell User's Group, Part 1 [https://www.youtube.com/watch?v=mYvkcskJbc4](https://www.youtube.com/watch?v=mYvkcskJbc4)
+* Ryan Trinkle: Reflex - Practical Functional Reactive Programming, NYC Haskell User's Group, Part 2 [https://www.youtube.com/watch?v=3qfc9XFVo2c](https://www.youtube.com/watch?v=3qfc9XFVo2c)
+* Niklas Hambüchen: FRP browser programming with Reflex, HaskellerZ meetup, Zürich [https://www.youtube.com/watch?v=dNGClNsnn24&t=2s](https://www.youtube.com/watch?v=dNGClNsnn24&t=2s)
+* Modular Web Snippets with Reflex [https://www.youtube.com/watch?v=8nMC2jL2iUY](https://www.youtube.com/watch?v=8nMC2jL2iUY)
+* On Reflex - Boston Haskell - Greg Hale [https://www.youtube.com/watch?v=MfXxuy_CJSk]()
+
+## Main Libraries
+
+* The official reflex repositories: [https://github.com/reflex-frp/](https://github.com/reflex-frp/)
+
+## Documentation
+
+* Read the Docs [http://reflex-frp.readthedocs.io/en/latest/](http://reflex-frp.readthedocs.io/en/latest/)
+
+## Cheat Sheets
+
+* Cheat Sheet Reflex [https://github.com/reflex-frp/reflex/blob/develop/Quickref.md](https://github.com/reflex-frp/reflex/blob/develop/Quickref.md)
+* Cheat Sheet Reflex.Dom [https://github.com/reflex-frp/reflex-dom/blob/develop/Quickref.md](https://github.com/reflex-frp/reflex-dom/blob/develop/Quickref.md)
+
+## Stackoverflow
+
+* Questions tagged reflex [http://stackoverflow.com/questions/tagged/reflex?sort=newest&pageSize=15](http://stackoverflow.com/questions/tagged/reflex?sort=newest&pageSize=15)
+
+
+## Other Libraries / Projects
+
+* A 2048 clone: [https://github.com/mightybyte/reflex-2048/blob/master/src/Main.hs](https://github.com/mightybyte/reflex-2048/blob/master/src/Main.hs)
+* HSnippet: [https://github.com/mightybyte/hsnippet](https://github.com/mightybyte/hsnippet)
+* [https://github.com/imalsogreg/my-reflex-recipes](https://github.com/imalsogreg/my-reflex-recipes)
+* [https://github.com/themoritz/7guis-reflex](https://github.com/themoritz/7guis-reflex)
+* [https://github.com/emmanueltouzery/cigale-timesheet](https://github.com/emmanueltouzery/cigale-timesheet)
+* [http://emmanueltouzery.github.io/reflex-presentation]()
