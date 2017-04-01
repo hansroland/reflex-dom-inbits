@@ -16,5 +16,7 @@ With Reflex-Dom you can write GUI applications in Haskell without understanding 
 on *Cascaded Style Sheets* (*CSS*). Of course, the more experience you have, the easier it is.
 
 Start by installing the reflex-platform from [https://github.com/reflex-frp/reflex-platform](https://github.com/reflex-frp/reflex-platform).
+Continue by cloning this repository with ``` git clone https://github.com/hansroland/reflex-dom-inbits ``` 
+and then read the file [tutorial.md](tutorial.md).
 
-Continue by reading the file [tutorial.md](tutorial.md).
+If you want to run refelx-dom programs native in WebkitGtk, you have to install *WebkitGtk*, *reflex*, *reflex-dom* with the normal GHC compiler with *stack* or *cabal*.

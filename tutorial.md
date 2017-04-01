@@ -307,7 +307,18 @@ Now it's easy to understand the whole line *mainWidget $ display =<< count =<< b
 * The function *count* creates a *Dynamic* value with the total number of these events.
 * The function *display* creates a DOM element with a string representation of this number and displays it as DOM element.
 
-**Try it!**
+## Running the Program in the Browser
+
+If you have installed *reflex-platform* do the following to run the program *src/count01.hs*:
+
+* Navigate into your *reflex-platform* directory.
+* Start the nix-shell by typing ``` ./try-reflex ``` (The first time this may take some time...)
+* In the nix-shell, navigate into your *reflex-dom-inbits* directory. You can use normal linux *cd* commands.
+* Compile the program with ``` ghcjs src/count01.hs```
+* Open the resulting *src/count01.jsexe/index.html* file with your browser. eg ``` chromium src/count01.jsexe/index.html```
+
+Unfortunately interactive ghcjs does not yet work, if the ghcjs compiler was compiled with GHC 8.0. 
+
 
 # Creating other DOM Elements
 
@@ -598,7 +609,7 @@ Comments:
 * Template Haskell runs at compile time. If you change something in your css file, you have to recompile 
 and re-deploy your application.
 * The path to the css file (*css/simple.css* in the above example) is used by the compiler and therefore relative to your working
-directory during compile time.
+directory during compile time. I assume that your working directory is *reflex-dom-inbits*.
 * If the css file does not exist, or the path is wrong, you will get an error during compile time.
 
 ## Function *mainWidgetWithHead*
@@ -647,9 +658,9 @@ Comments:
 It is relative to the directory you run your program from.
 * Depending on how you run your reflex-dom program, you have to copy your *.css files to the correct directory.
 * If the css file does not exist, or the path is wrong, the browser or WebkitGtk will simply ignore your css specs.
-* If you change your css files, the changes become active after a restart of your program.
-* If you run your program in the interactive shell with *ghcjs --interactive*, this example will not work. 
-The interactive shell of ghcjs does not serve any files.
+* If you compile your program with *ghcjs* and run it with *chromium src/<program>.jsexe/index.html*, your working 
+directory is *src/<program>.jsexe*. You have to manually copy the directory from *reflex-dom-inbits/css* to *src/<program>.jsexe*.
+* If you change your css files, the changes become active after a reload of the *index.html* page in the browser.
 * It is possible, to specify other options in your header element.
 * Unfortunately you have to annotate the type ```:: MonadWidget t m => m ()``` for the functions *headElement* and *bodyElement*. GHC is not able to infer these types and gives you a not so nice error message.
 * The *title* element in the header, will be used in the page tab of your browser.
