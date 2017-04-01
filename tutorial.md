@@ -168,8 +168,7 @@ to the correct string type. We don't need to pack and unpack the string constant
 
 ```{-# LANGUAGE RecursiveDo #-}```
 
-Sometimes we need to access a value or an event from a DOM element before it is defined. The magic behind
-*RecursiveDo* makes this possible.
+Sometimes we need to access a value or an event from a DOM element before it is defined. *RecursiveDo* makes this easy, by extending the `do`-notation syntax sugar.
 
 ```{-# LANGUAGE ScopedTypeVariables #-}```
 
