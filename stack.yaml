@@ -1,0 +1,45 @@
+# stack yaml starter file for reflex projects with ghc
+
+# For lts versions and sha values see: 
+#    https://github.com/commercialhaskell/stack/blob/master/doc/ghcjs.md
+
+resolver: lts-6.25
+compiler: ghcjs-0.2.0.9006025_ghc-7.10.3
+compiler-check: match-exact
+
+setup-info:
+ ghcjs:
+   source:
+     ghcjs-0.2.0.9006025_ghc-7.10.3:
+       url: http://ghcjs.tolysz.org/lts-6.25-9006025.tar.gz
+       sha1: 3c87228579b55c05e227a7876682c2a7d4c9c007
+
+flags: {}
+extra-package-dbs: []
+packages:
+- '.'
+- location:
+    git: https://github.com/reflex-frp/reflex
+    commit: 91299fce0bb2caddfba35af6608df57dd31e3690
+  extra-dep: true
+
+- location:
+    git: https://github.com/reflex-frp/reflex-dom
+    commit: 7309aaa6c8e08795eb2518866ea73fd98aaaa8d9
+  extra-dep: true
+
+- location:
+    git: https://github.com/reflex-frp/reflex-dom-contrib
+    commit: 86e1a657862183dc76ad02d04bd87365ac4b16b6
+  extra-dep: true
+
+- location:
+    git: https://github.com/hansroland/opench
+    commit: ddcb5119a15f2729bc5fe400e52653cedbee104a
+  subdirs:
+  - meteo
+
+extra-deps:
+- prim-uniq-0.1.0.1
+- ref-tf-0.4.0.1
+- zenc-0.1.1
