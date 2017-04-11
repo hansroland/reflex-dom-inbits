@@ -19,18 +19,31 @@ extra-package-dbs: []
 packages:
 - '.'
 - location:
+    git:  https://github.com/ghcjs/ghcjs.git
+    commit: 8c30beb939dadcb949b922856735080699d1d986
+  subdirs:
+  - lib/ghcjs-prim
+  extra-dep: true
+
+- location:
+    git: https://github.com/ghcjs/ghcjs-base.git
+    commit: dd7034ef8582ea8a175a71a988393a9d1ee86d6f
+  extra-dep: true
+
+- location:
     git: https://github.com/reflex-frp/reflex
     commit: 91299fce0bb2caddfba35af6608df57dd31e3690
   extra-dep: true
 
 - location:
     git: https://github.com/reflex-frp/reflex-dom
-    commit: 7309aaa6c8e08795eb2518866ea73fd98aaaa8d9
+    commit: 66b6d35773fcb337ab38ebce02c4b23baeae721e
   extra-dep: true
 
 - location:
     git: https://github.com/reflex-frp/reflex-dom-contrib
-    commit: 86e1a657862183dc76ad02d04bd87365ac4b16b6
+    commit: 377e2c541cd360ee749e2fccaa4f087821bf120c
+    # commit: 86e1a657862183dc76ad02d04bd87365ac4b16b6
   extra-dep: true
 
 - location:
@@ -38,8 +51,11 @@ packages:
     commit: ddcb5119a15f2729bc5fe400e52653cedbee104a
   subdirs:
   - meteo
+  extra-dep: true
 
 extra-deps:
 - prim-uniq-0.1.0.1
 - ref-tf-0.4.0.1
 - zenc-0.1.1
+- ghcjs-dom-0.2.4.0
+

@@ -21,7 +21,11 @@ library
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9
+                      , text
+                      , time
+                      , containers
                       , file-embed
+                      , mtl
                       , reflex
                       , reflex-dom
                       , reflex-dom-contrib
