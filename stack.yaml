@@ -3,49 +3,35 @@
 # For lts versions and sha values see: 
 #    https://github.com/commercialhaskell/stack/blob/master/doc/ghcjs.md
 
-resolver: lts-6.25
-compiler: ghcjs-0.2.0.9006025_ghc-7.10.3
-compiler-check: match-exact
+resolver: lts-7.3
+compiler: ghcjs-0.2.1.9007003_ghc-8.0.1
 
 setup-info:
- ghcjs:
-   source:
-     ghcjs-0.2.0.9006025_ghc-7.10.3:
-       url: http://ghcjs.tolysz.org/lts-6.25-9006025.tar.gz
-       sha1: 3c87228579b55c05e227a7876682c2a7d4c9c007
+  ghcjs:
+    source:
+      ghcjs-0.2.1.9007003_ghc-8.0.1:
+          url: http://ghcjs.tolysz.org/ghc-8.0-2016-10-11-lts-7.3-9007003.tar.gz
+          sha1: 3196fd5eaed670416083cf3678396d02c50096de
 
-flags: {}
-extra-package-dbs: []
 packages:
 - '.'
 - location:
-    git:  https://github.com/ghcjs/ghcjs.git
-    commit: 8c30beb939dadcb949b922856735080699d1d986
-  subdirs:
-  - lib/ghcjs-prim
-  extra-dep: true
-
-- location:
     git: https://github.com/ghcjs/ghcjs-base.git
-    commit: dd7034ef8582ea8a175a71a988393a9d1ee86d6f
+    # commit: dd7034ef8582ea8a175a71a988393a9d1ee86d6f
+    commit: 9d7f01bd3be3a4f044a8716f0a1538dc00b63e6d
   extra-dep: true
-
 - location:
     git: https://github.com/reflex-frp/reflex
     commit: 91299fce0bb2caddfba35af6608df57dd31e3690
   extra-dep: true
-
 - location:
     git: https://github.com/reflex-frp/reflex-dom
     commit: 66b6d35773fcb337ab38ebce02c4b23baeae721e
   extra-dep: true
-
 - location:
     git: https://github.com/reflex-frp/reflex-dom-contrib
-    commit: 377e2c541cd360ee749e2fccaa4f087821bf120c
-    # commit: 86e1a657862183dc76ad02d04bd87365ac4b16b6
+    commit: df4138406a5489acd72cf6c9e88988f13da02b31 # b4ac9378318ee71a109faef5860cccd9231bc7bd
   extra-dep: true
-
 - location:
     git: https://github.com/hansroland/opench
     commit: ddcb5119a15f2729bc5fe400e52653cedbee104a
@@ -54,8 +40,10 @@ packages:
   extra-dep: true
 
 extra-deps:
-- prim-uniq-0.1.0.1
-- ref-tf-0.4.0.1
-- zenc-0.1.1
+- tz-0.1.2.0
+- dlist-0.7.1.2
 - ghcjs-dom-0.2.4.0
+- ref-tf-0.4.0.1
+- prim-uniq-0.1.0.1
+- zenc-0.1.1
 
