@@ -1,0 +1,45 @@
+Basics of Functional Reactive Programming (FRP) and Reflex
+- The Basic Ideas of Functional Reactive Programming
+- Event
+- Behavior
+- Dynamic
+Before we really start coding...
+- Used Library Versions
+- Popular Language Extensions
+- Popular Imports
+A First Simple Reflex-Dom Example
+- Function mainWidget
+- Function display
+- Function count
+- Function button
+Creating other DOM Elements
+- Function text
+- Function dynText
+- The Function family el, elAttr, elClass, elDynAttr, elDynClass
+- Function el
+- Function blank
+- Function elAttr
+- Function elClass
+- Function elDynAttr
+- Function elDynClass
+Main Functions
+- Function mainWidgetWithCss
+- Function mainWidgetWithHead
+- Summary
+Basic Event Handling
+- Function foldDyn
+- Function leftmost
+- Function mergeWith
+- Function Application as Fold Function
+Predefined Input Widgets
+- Text Input Fields
+- TextAreas
+- Checkboxes
+- Radio Buttons
+- Ranges
+Defining your own events
+- The Function family el', elAttr', elClass', elDynAttr', elDynClass'
+- The function domEvent
+- Example Disable / enable a Button
+
+(to be continued)

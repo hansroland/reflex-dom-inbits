@@ -1,0 +1,34 @@
+In the documentation for [reflex-platform](https://github.com/reflex-frp/reflex-platform) under point 5 I read:
+
+If you need to add any additional dependencies, edit packages.nix, then exit and re-enter the try-reflex shell. Don't use cabal install to install libraries while inside the try-reflex shell - the resulting libraries may not be found properly by ghc or ghcjs.
+
+Now I want to add a package, say [bytestring-strict-builder](http://hackage.haskell.org/package/bytestring-strict-builder-0.4.5/docs/ByteString-StrictBuilder.html).
+
+I added *bytestring-strict-builder* to my packages.nix file:
+
+{ haskellPackages, platform }:
+
+with haskellPackages;
+
+[
+  ##############################################################################
+  # Add general packages here                                                  #
+  ##############################################################################
+  reflex
+  reflex-dom
+  reflex-todomvc
+  bytestring-strict-builder
+
+] ++ (if platform == "ghcjs" then [
+  ##############################################################################
+  # Add ghcjs-only packages here                                               #
+  ##############################################################################
+
+] else []) ++ (if platform == "ghc" then [
+  ##############################################################################
+  # Add ghc-only packages here                                                 #
+  ##############################################################################
+
+] else []) ++ builtins.concatLists (map (x: x.override { mkDerivation = drv: (drv.buildDepends or []) ++ (drv.libraryHaskellDepends or []) ++ (drv.executableHaskellDepends or []); }) [ reflex reflex-dom reflex-todomvc ])
+
+When I run ./try-reflex, I get the error: *undefined variable ‘bytestring-strict-builder’*
