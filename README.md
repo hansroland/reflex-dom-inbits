@@ -21,5 +21,3 @@ the reflex-platform from [https://github.com/reflex-frp/reflex-platform](https:/
 Alternatively you can use stack, however, this will take a long time.
 
 Then read the file [tutorial.md](tutorial.md).
-
-If you want to run refelx-dom programs native in WebkitGtk, you have to install *WebkitGtk*, *reflex*, *reflex-dom* with the normal GHC compiler with *stack* or *cabal*.

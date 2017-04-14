@@ -308,7 +308,7 @@ Now it's easy to understand the whole line *mainWidget $ display =<< count =<< b
 
 ## Running the Program in the Browser
 
-If you have installed *reflex-platform* do the following to run the program *src/count01.hs*:
+If you have installed *reflex-platform* do the following to run the program *src/count01.hs* in the browser:
 
 * Navigate into your *reflex-platform* directory.
 * Start the nix-shell by typing ``` ./try-reflex ``` (The first time this may take some time...)
@@ -316,7 +316,16 @@ If you have installed *reflex-platform* do the following to run the program *src
 * Compile the program with ``` ghcjs src/count01.hs```
 * Open the resulting *src/count01.jsexe/index.html* file with your browser. eg ``` chromium src/count01.jsexe/index.html```
 
-Unfortunately interactive ghcjs does not yet work, if the ghcjs compiler was compiled with GHC 8.0. 
+Unfortunately interactive ghcjs does not yet work, if the ghcjs compiler was compiled with GHC 8.0.
+
+## Running the Program in WebkitGtk
+
+If you have installed *reflex-platform* do the following to run the program *src/count01.hs* as a native programme:
+
+* Navigate into your *reflex-platform* directory.
+* Start the nix-shell by typing ``` ./try-reflex ``` (The first time this may take some time...)
+* In the nix-shell, navigate into your *reflex-dom-inbits* directory. You can use normal linux *cd* commands.
+* Run the program with ``` runghc src/count01.hs```
 
 
 # Creating other DOM Elements
