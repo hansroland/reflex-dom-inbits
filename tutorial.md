@@ -1815,12 +1815,12 @@ This is a little helper function we use in the next example. It has the type:
 
 ```getPostBuild :: PostBuild t m => m (Event t ())```
 
-It generates a single event at the time the HTML page ha been created. It's similar to the HTML *onload*.
+It generates a single event at the time the HTML page has been created. It's similar to the HTML *onload*.
 
 
-## Swiss Weather Data
+# Swiss Meteo Data Example 1
 
-As an example server w'll use a Web service, that returns the measuement data of the last 10 minutes of automatic weather stations. This Web service has some advantages:
+As an example server w'll use a Web service, that returns the measuement data of the last 10 minutes of automatic metoe stations. This Web service has some advantages:
 
 * You can just use this service. It's not necessary to register with your e-mail address.
 * It's very simple: There are only 2 different requests and responses.
@@ -1834,7 +1834,7 @@ For the first example we use a dropdown with a fixed list of stations:
 * Zermatt, the world fameous mountain resort at the bottom of the Matterhorn: [http://www.zermatt.ch/en](http://www.zermatt.ch/en)
 * Binn, a small and very lovely mountain village, far off mainstream tourism: [http://www.landschaftspark-binntal.ch/en/meta/fotogalerie.php](http://www.landschaftspark-binntal.ch/en/meta/fotogalerie.php)
 
-Every weather station has a 3-letter code eg "BER" for Bern. We send this 3-letter code to the server and it returns a JSON string wih the measured data. To start, we just show this JSON string as it is, withour any nice formatting.
+Every meteo station has a 3-letter code eg "BER" for Bern. We send this 3-letter code to the server and it returns a JSON string wih the measured data. To start, we just show this JSON string as it is, withour any nice formatting.
 
 The code is in the file *src/xhr01.hs*:
 
@@ -1851,7 +1851,7 @@ main = mainWidget body
 
 body :: MonadWidget t m => m ()
 body  = el "div" $ do
-  el "h2" $ text "Swiss Weather Data (raw version)"
+  el "h2" $ text "Swiss Meteo Data (raw version)"
   text "Choose station: "
   dd <- dropdown "BER" (constDyn stations) def
   -- Build and send the request
@@ -1879,13 +1879,101 @@ Comments:
 * We send a request immediately after startup and every time the value of the dropdown changes.
 * At the time of this writing, the station *Binn* is not operational. The server returns a code of 204 in the *_xhrResponse_status* field.
 
+# Swiss Meteo Data Example 2
+
+Now we want not just display the raw JSON string. We want to display the meteo data (more or less) nicely.
+We will use a tabbed display to show the returned data. If the station has no data, we will show an error page.
+
+## Handling the Error Case with Event Filtering
+
+From the server we get back responses with an HTTP return code. If this respone code is 200, the server
+returned real meteo data. If the response code has an other value, something strange happend and we issue
+an error message. We need to separate these 2 types of events. Event filtering is the way to do it.
+
+There are 2 functions:
+
+``` ffilter   :: (a -> Bool) ->  Event t a -> Event t a ```
+
+``` fforMaybe :: Event t a -> (a -> Maybe b) -> Event t b ```
+
+The function *ffilter* selects only those events that fullfill the predicate *(a -> Bool)*. Other events are discarded.
+The function *fforMaybe* selects only those events, where the function *(a -> Maybe b)* returns a *Just b* value,
+and does a corresponding event transformation from *a* to *b*.
+
+Separating the good and the bad events is now easy:
+
+~~~ { .haskell }
+let (evOk, evErr) = checkXhrRsp evRsp
+~~~ 
+
+where
+
+~~~ { .haskell }
+-- | Split up good and bad response events
+checkXhrRsp :: FunctorMaybe f => f XhrResponse -> (f XhrResponse, f XhrResponse)
+checkXhrRsp evRsp = (evOk, evRsp)
+  where
+    evOk = ffilter (\rsp -> _xhrResponse_status rsp == 200) evRsp
+    evErr = ffilter (\rsp -> _xhrResponse_status rsp /= 200) evRsp
+~~~
+
+Remarks:
+
+* Ok, in a prefessional environnment you would replace the hardcoded number *200* with a nice constant.
+* I asked *ghci* to tell me the type signature of the function *checkXhrRsp*.
+* *Event Filtering* is one of the powerful methods used in reflex-dom programs.
+
+## Hiding unwanted Pages
+
+If the server sent a nice response with a status code of 200 we don't want to show the error page.
+If we receive a response with a bad status code, means different from 200, we don't want to show the data page.
+In the *Dynamic* value *dynPage* we store the page we want to display.
+For this we have our data type *Page* with an enumeration of our pages.
+Again we use *foldDyn* with function application. The last event sets the value of *dynPage*:
+
+~~~ { .haskell }
+dynPage <- foldDyn ($) PageData $ leftmost [const PageData <$ evOk, const PageErr <$ evErr]
+~~~
+
+For each of our pages we write an own function to display the data. As parameters we use
+the corresponding event and the value *dynPage*:
+
+~~~ { .haskell }
+  pageData evOk dynPage
+  pageErr evErr dynPage
+~~~
+
+Inside the page functions we use the function *visible* to create a dynamic attribute map,
+which contains a visible or hide attribute. The example shows the code for the error page:
+
+~~~ { .haskell }
+-- | Display the error page
+pageErr :: MonadWidget t m => Event t XhrResponse -> Dynamic t Page -> m ()
+pageErr evErr dynPage = do
+  let dynAttr = visible <$> dynPage <*> pure PageError
+  elDynAttr "div" dynAttr $ do 
+     el "h3" $ text "Error"
+~~~ 
+
+where
+
+~~~ { .haskell }
+-- | Helper function to create a dynamic attribute map for the visibility of an element
+visible :: Eq p => p -> p -> Map.Map T.Text T.Text
+visible p1 p2 = "style" =: ("display: " <> choose (p1 == p2) "inline" "none")
+  where 
+    choose True  t _ = t
+    choose False _ f = f
+~~~ 
+
 ## Function *decodeXhrResponse*: Parsing the JSON String
 
-To parse the JSON string we use the popular *aeson* library. We need a data structure that corresponds to the JSON string. 
+If we receive a response with a status code of 200, we need to parse the JSON string.
+For this we use the popular *aeson* library. We need a data structure that corresponds to the JSON string. 
 
-For the Swiss weather data you can find the Haskell definitons and the instances of the *FromJSON* type class in the library *opench-meteo*. 
-
-You can find this library on [https://github.com/hansroland/opench/tree/master/meteo]().
+The library *opench-meteo* contains Haskell definitons for the Swiss meteo data and the instances of the 
+*FromJSON* type class. You can find this library on [Hackage](http://hackage.haskell.org/package/opench-meteo)
+or on [https://github.com/hansroland/opench/tree/master/meteo](https://github.com/hansroland/opench/tree/master/meteo).
 
 We need to import this library: ```import Data.Meteo.Swiss```.
 
@@ -1898,10 +1986,11 @@ However sometimes you have to give a little bit help to the compiler. The compil
 
 ```evSmnRec :: (Event t SmnRecord) <- return $  fmapMaybe decodeXhrResponse evRsp```
 
-Note: In our situation the scoped type varaible is not really necessary, beause we nicely type annoteted all functions.
+Note: In our situation the scoped type varaible is not really necessary, because we nicely type annoteted all functions.
 However in a lot of situations you may have to give help to the compiler.
 
-The function *decodeXhrResponse* returns a *Maybe (Event t SmnRecord)*. Again we are sloppy and ignore error handling.
+The function *decodeXhrResponse* returns a *Maybe (Event t SmnRecord)*. 
+Again we are sloppy and ignore error handling.
 Therefore we use *fmapMaybe*. 
 
 ## Function *tabDisplay*: Display the data on a tabbed page
@@ -1995,44 +2084,6 @@ tShow (Just x) = (T.pack . show) x
 
 Note: With the function *tabDisplay* the number of tabs is fix. You cannot change it during run time. 
 
-## Handling the Error case
-
-We still have the situation, that the *Binn* weather station does not return any data. 
-We now want to give an error message for this.
-First we check the HTTP status fo our response and store it in a *Dynamic* value:
-
-~~~ { .haskell }
-  -- Check on html response code 200
-  dynOk <- holdDyn False $ (\rsp -> _xhrResponse_status rsp == 200)  <$> evRsp
-~~~
-
-Ok in a prefessional environnment you would replace the hardcoded number *200* with a nice constant.
-
-Then we create an attribute map to make the tab display "visible" or "inivisble" depending wether the *dynOk" value is *True* or *False*.
-In a last step, we attach this attribute map to a *div* HTML element containing our tab element. 
-
-~~~ { .haskell }
-  let dynAttrVisData = visible <$> dynOk
-  elDynAttr "div" dynAttrVisData $
-    tabDisplay "tab" "tabact" $ tabMap evSmnRec evSmnStat
-
--- | Helper function to create a dynamic attribute map for the visibility of an element
-visible :: Bool -> Map.Map T.Text T.Text
-visible b = "style" =: ("display: " <> choose b "inline" "none")
-  where 
-    choose True  t _ = t
-    choose False _ f = f
-~~~
-
-Similar, we create a little HTML element for the error case and show it only if our *dynOk* value is *False*:
-
-~~~ { .haskell }
-  -- Show error msg
-  let dynAttrVisError = (visible . not) <$> dynOk
-  elDynAttr "div" dynAttrVisError $ do 
-     el "h3" $ text "Error"
-     dynText =<< holdDyn "" (_xhrResponse_statusText <$> evRsp)
-~~~
 
 I'll not reproduce the whole code here. You can find it in the file *src/xhr02.hs*.
 

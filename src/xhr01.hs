@@ -10,7 +10,7 @@ main = mainWidget body
 
 body :: MonadWidget t m => m ()
 body  = el "div" $ do
-  el "h2" $ text "Swiss Weather Data (raw version)"
+  el "h2" $ text "Swiss Meteo Data (raw version)"
   text "Choose station: "
   dd <- dropdown "BER" (constDyn stations) def
   -- Build and send the request

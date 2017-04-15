@@ -13,6 +13,11 @@ main :: IO ()
 main = mainWidgetWithCss css body
    where css = $(embedFile "css/tab.css")
 
+-- | Enumeration to track type of page to display
+data Page = PageData | PageError
+   deriving Eq
+
+-- | Create the HTML body
 body :: MonadWidget t m => m ()
 body  = el "div" $ do
   el "h2" $ text "Swiss Weather Data (Tab display)"
@@ -23,20 +28,44 @@ body  = el "div" $ do
   evStart <- getPostBuild
   let evCode = tagPromptlyDyn (value dd) $ leftmost [ () <$ _dropdown_change dd, evStart]
   evRsp <- performRequestAsync $ buildReq <$> evCode
-  -- Check on html response code 200
-  dynOk <- holdDyn False $ (\rsp -> _xhrResponse_status rsp == 200)  <$> evRsp
-  -- Show a tabbed tabDisplay
-  evSmnRec :: (Event t SmnRecord) <- return $  fmapMaybe decodeXhrResponse evRsp
-  let evSmnStat = fmapMaybe smnStation evSmnRec
-  let dynAttrVisData = visible <$> dynOk
-  elDynAttr "div" dynAttrVisData $
-    tabDisplay "tab" "tabact" $ tabMap evSmnRec evSmnStat
-  -- Show error msg
-  let dynAttrVisError = (visible . not) <$> dynOk
-  elDynAttr "div" dynAttrVisError $ do 
-     el "h3" $ text "Error"
-     dynText =<< holdDyn "" (_xhrResponse_statusText <$> evRsp)
+  -- Check on HTML response code and remember state.
+  let (evOk, evErr) = checkXhrRsp evRsp
+  dynPage <- foldDyn ($) PageData $ leftmost [const PageData <$ evOk, const PageErr <$ evErr]
+  -- Create the 2 pages
+  pageData evOk dynPage
+  pageErr evErr dynPage
   return ()
+
+-- | Display the meteo data in a tabbed display
+pageData :: MonadWidget t m => Event t XhrResponse -> Dynamic t Page -> m ()
+pageData evOk dynPage = do
+  evSmnRec :: (Event t SmnRecord) <- return $  fmapMaybe decodeXhrResponse evOk
+  let evSmnStat = fmapMaybe smnStation evSmnRec
+  let dynAttr = visible <$> dynPage <*> pure PageData
+  elDynAttr "div" dynAttr $
+    tabDisplay "tab" "tabact" $ tabMap evSmnRec evSmnStat
+
+-- | Display the error page
+pageErr :: MonadWidget t m => Event t XhrResponse -> Dynamic t Page -> m ()
+pageErr evErr dynPage = do
+  let dynAttr = visible <$> dynPage <*> pure PageError
+  elDynAttr "div" dynAttr $ do 
+     el "h3" $ text "Error"
+     dynText =<< holdDyn "" (_xhrResponse_statusText <$> evErr)
+
+-- | Split up good and bad response events
+checkXhrRsp :: FunctorMaybe f => f XhrResponse -> (f XhrResponse, f XhrResponse)
+checkXhrRsp evRsp = (evOk, evRsp)
+  where
+    evOk = ffilter (\rsp -> _xhrResponse_status rsp == 200) evRsp
+    evErr = ffilter (\rsp -> _xhrResponse_status rsp /= 200) evRsp
+
+-- | Helper function to create a dynamic attribute map for the visibility of an element
+visible :: Eq p => p -> p -> Map.Map T.Text T.Text
+visible p1 p2 = "style" =: ("display: " <> choose (p1 == p2) "inline" "none")
+  where 
+    choose True  t _ = t
+    choose False _ f = f
 
 buildReq :: T.Text -> XhrRequest ()
 buildReq code = XhrRequest "GET" (urlDataStat code) def
@@ -70,7 +99,7 @@ tabMeteo evMeteo = do
   dispMeteoField "Wind Speed" smnWindSpeed evMeteo
   return ()
 
--- Display a single field from the SmnStation record
+-- | Display a single field from the SmnStation record
 dispStatField :: MonadWidget t m => T.Text -> (SmnStation -> T.Text) -> Event t SmnStation -> m ()
 dispStatField label rend evStat = do
   el "br" blank
@@ -78,7 +107,7 @@ dispStatField label rend evStat = do
   dynText =<< holdDyn "" (fmap rend evStat)
   return ()
 
--- Display a single field from the SmnRecord record
+-- | Display a single field from the SmnRecord record
 dispMeteoField :: MonadWidget t m => T.Text -> (SmnRecord -> T.Text) -> Event t SmnRecord -> m ()
 dispMeteoField label rend evRec = do
   el "br"blank
@@ -91,10 +120,3 @@ dispMeteoField label rend evRec = do
 tShow :: Show a => Maybe a -> T.Text
 tShow Nothing = ""
 tShow (Just x) = (T.pack . show) x
-
--- | Helper function to create a dynamic attribute map for the visibility of an element
-visible :: Bool -> Map.Map T.Text T.Text
-visible b = "style" =: ("display: " <> choose b "inline" "none")
-  where 
-    choose True  t _ = t
-    choose False _ f = f
