@@ -30,7 +30,7 @@ body  = el "div" $ do
   evRsp <- performRequestAsync $ buildReq <$> evCode
   -- Check on HTML response code and remember state.
   let (evOk, evErr) = checkXhrRsp evRsp
-  dynPage <- foldDyn ($) PageData $ leftmost [const PageData <$ evOk, const PageErr <$ evErr]
+  dynPage <- foldDyn ($) PageData $ leftmost [const PageData <$ evOk, const PageError <$ evErr]
   -- Create the 2 pages
   pageData evOk dynPage
   pageErr evErr dynPage
