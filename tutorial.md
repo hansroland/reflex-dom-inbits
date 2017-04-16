@@ -909,7 +909,7 @@ It's an event, that never occurs.
 Note the type of the _textInputConfig_attributes: It's ```Dynamic t (Map Text Text)```.
 To create a Dynamic map we can use the function *constDyn*: 
 It takes an value of type ```a``` and returns a value of type ```Dynamic t a```. 
-Of course, a Dynamic created with *contDyn* will not change while our program is running.
+Of course, a Dynamic created with *constDyn* will not change while our program is running.
 
 
 ~~~ { .haskell }
