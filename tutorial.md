@@ -723,7 +723,8 @@ Look at the line: ```numbs <- foldDyn (+) (0 :: Int)  (1 <$ evIncr)```:
 * We have to specify the type of the initial value. The compiler does not know whether we want to count up numbers of type *Int* or *Integer* or even *Float*.
 * evIncr has the type ```Event t ()```. We cannot use () as an argument for the (+) fold function. Therfore we use
 applicative syntax to replace the event payload *()* by the number *1*. 1 we can use together with our fold function (+)!
-* This is the first example that uses *event tranformation* 
+* This is the first example that uses *event tranformation*
+* We need *recursive do": We refer to *evIncr* before it is defined.
 
 Please note, that in reflex-dom the implemention of *count* differs from our example above.
 
@@ -1883,6 +1884,7 @@ Comments:
 
 Now we want not just display the raw JSON string. We want to display the meteo data (more or less) nicely.
 We will use a tabbed display to show the returned data. If the station has no data, we will show an error page.
+I'll not reproduce the whole code here. You can find it in the file *src/xhr02.hs*.
 
 ## Handling the Error Case with Event Filtering
 
@@ -1923,7 +1925,7 @@ Remarks:
 * I asked *ghci* to tell me the type signature of the function *checkXhrRsp*.
 * *Event Filtering* is one of the powerful methods used in reflex-dom programs.
 
-## Hiding unwanted Pages
+## Hiding unwanted HTML elements
 
 If the server sent a nice response with a status code of 200 we don't want to show the error page.
 If we receive a response with a bad status code, means different from 200, we don't want to show the data page.
@@ -1982,7 +1984,15 @@ The function *decodeXhrResponse* converts the response returned by the *performR
 ```decodeXhrResponse :: FromJSON a =>  XhrResponse -> Maybe a```
 
 However sometimes you have to give a little bit help to the compiler. The compiler must know the target data type for the 
-*decodeXhrResponse* function. In our case we want back a *Event t SmnRecord*. So we write:
+*decodeXhrResponse* function. In our case we want back a *Event t SmnRecord*. 
+Therefore I tried to add the type annotation in a let expression:
+
+```let evSmnRec :: (Event t SmnRecord) = fmapMaybe decodeXhrResponse evRsp```
+
+However, I couldn't find a syntax, that was accepted by the compiler. 
+
+So with *return* I wrap the *fmapMaybe decodeXhrResponse evRsp* into the monad and can use the syntax of the 
+*ScopedTypeVariables* language extension:
 
 ```evSmnRec :: (Event t SmnRecord) <- return $  fmapMaybe decodeXhrResponse evRsp```
 
@@ -2082,10 +2092,100 @@ tShow Nothing = ""
 tShow (Just x) = (T.pack . show) x
 ~~~
 
-Note: With the function *tabDisplay* the number of tabs is fix. You cannot change it during run time. 
+Note: With the function *tabDisplay* the number of tabs is fix. You cannot change it during run time.
 
+# Swiss Meteo Data Example 3
 
-I'll not reproduce the whole code here. You can find it in the file *src/xhr02.hs*.
+The code is in file *src/xhr03.hs*.
+
+Till now we only had our 5 fix predefined meteo stations. Now we want a first page with a list of all stations,
+a second page with the detailed data of one selected station and an error page. We need a XhrRequest to get a list 
+of all stations.
+The page with the detailed data of a single station and the error page both need a *Back* button, 
+so the user can return to the first page with the station list, and therefore the page rendering functions have to 
+return the click events of these *Back* buttons. 
+
+We do all this in the function *body*. The additonal events and the two XhrRequests make the logic 
+of this function a little bit more complicated. 
+Because we refer to events defined later, we have to use *recursive do*. In the function *body* we don't use
+any new function or programming concept!
+
+A word of caution to *recursive do*: It is possible to create event loops that will blow up your program! So be careful! 
+
+## Function *switchPromptlyDyn*
+
+Reflex-don has a helper function *switchPromptlyDyn* with the following type:
+
+```switchPromptlyDyn :: Reflex t => Dynamic t (Event t a) -> Event t a```
+
+It just unwraps an Event out of a Dynmaic.
+
+## Function *simpleList*
+
+The real new thing in this example is: We have a variable number of meteo stations to display on the first page!
+All our examples so far displayed a static predefined number of HTML elements.
+Reflex-dom has several functions to display a variable number of items: *dyn*, *widgetHold*, *listWithKey*,
+*list*, *simpleList*, *listViewWithKey*, *selectViewListWithKey* and *listWithKey'*. We use the function 
+*simpleList*. It has the following definition:
+
+```(...) => Dynamic t [v] -> (Dynamic t v -> m a) -> m (Dynamic t [a])```
+
+The first parameter *Dynamic t [v]* is a dynamic list of items we want to render. After we parse the JSON string
+we have a value of type *Event t [SmnRecord]*. With *holdDyn* we can convert this to *Dynamic t [SmnRecord]*,
+which can be use as first parameter for the function *simpleList*.
+
+The second parameter is a function to render a single element of type *v*, or in our case *SmnRecord*. For each 
+station record, we render a *View* button, and the name of the station.
+We pack this into a HTML table row, so we need *tr* and *td* HTML elements. 
+
+This is done in the function *displayStationRow* with a helper function to create the button:
+
+~~~ { .haskell }
+-- | Create the HTML element for a single HTML table row
+displayStationRow :: MonadWidget t m => Dynamic t SmnRecord -> m (Event t T.Text)
+displayStationRow dynRec =  el "tr" $ do
+  evRow <- el "td" $ cmdButton "View" dynRec
+  el "td" $ dynText $ staName . fromJust . smnStation <$> dynRec
+  return evRow
+
+cmdButton :: MonadWidget t m => T.Text -> Dynamic t SmnRecord -> m (Event t T.Text)
+cmdButton label staRec = do
+    (btn, _) <- el' "button" $ text label
+    let dynNam = smnCode <$> staRec
+    return $ tagPromptlyDyn dynNam $ domEvent Click btn  
+~~~
+
+When the user clicks on one of the buttons, we need to know, to which station this button belongs.
+Therefore clicking on the *view* button, returns an event with the 3-letter code of the station as payload.
+
+The function *simpleList* aggregates all the return values of the rendering function into a list.
+
+So in our case, the function *simpleList* has the type:
+
+```(...) => Dynamic t [SmnRecord] -> (Dynamic t SmnRecord -> m (Event t T.Text)) -> m (Dynamic t [Event t T.Text])```
+
+We then use the function *switchPromptlyDyn* to unwrap the list of events out of the Dynamic. 
+The function *leftmost* then returns the event of the *view* button the user clicked.
+We use this event in the function *body* to fetch the detailed (and possibly changed!) data of this station. 
+
+Here is the code:
+
+~~~ { .haskell }
+    -- list stations
+    el "table" $ do                                              -- put everything into a HTML table
+      dynList :: Dynamic t [SmnRecord] <- holdDyn [] evList      -- prepare the first argument for simpleList
+      evRowsDyn <- simpleList dynList displayStationRow          -- render all station records
+      return $ switchPromptlyDyn $ leftmost <$> evRowsDyn        -- get the correct click event
+~~~
+
+Look at *src/xhr03.hs*: Without the comment lines and without the empty lines we have less than 150 lines of code.
+
+**In these 150 LoC we have a SPA application that fetches data from a server,
+displays it on 2 data pages. One of the data pages has a tabbed display and we have also some error handling!!**
+
+Of course, there is room for improvment eg sort the station names on the first page, improve error handling,
+use CSS to make it easier to look at the screens etc, etc. 
+
 
 # Appendix - References to Reflex-Dom Resources on the Internet
 
