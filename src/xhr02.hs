@@ -93,7 +93,7 @@ tabMeteo :: MonadWidget t m => Event t SmnRecord -> m ()
 tabMeteo evMeteo = do 
   dispMeteoField "Date/Time" (tShow . smnDateTime) evMeteo
   dispMeteoField "Temperature" smnTemperature evMeteo
-  dispMeteoField "Sunnshine" smnSunshine evMeteo
+  dispMeteoField "Sunshine" smnSunshine evMeteo
   dispMeteoField "Precipitation" smnPrecipitation evMeteo
   dispMeteoField "Wind Direction" smnWindDirection evMeteo
   dispMeteoField "Wind Speed" smnWindSpeed evMeteo
