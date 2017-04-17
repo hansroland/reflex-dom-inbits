@@ -2114,7 +2114,7 @@ A word of caution to *recursive do*: It is possible to create event loops that w
 
 ## Function *switchPromptlyDyn*
 
-Reflex-don has a helper function *switchPromptlyDyn* with the following type:
+Reflex-Dom has a helper function *switchPromptlyDyn* with the following type:
 
 ```switchPromptlyDyn :: Reflex t => Dynamic t (Event t a) -> Event t a```
 
@@ -2136,7 +2136,7 @@ which can be use as first parameter for the function *simpleList*.
 
 The second parameter is a function to render a single element of type *v*, or in our case *SmnRecord*. For each 
 station record, we render a *View* button, and the name of the station.
-We pack this into a HTML table row, so we need *tr* and *td* HTML elements. 
+We pack this into a row of a HTML table, so we need *tr* and *td* HTML elements. 
 
 This is done in the function *displayStationRow* with a helper function to create the button:
 
