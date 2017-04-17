@@ -1024,7 +1024,7 @@ Sometimes you want to use this contents when the user clicks a button.
 ```tagPromptlyDyn :: Reflex t => Dynamic t a -> Event t b -> Event t a```
 
 When the event in the second function parameter occurs, the function returns a new event with the payload of the Dynamic value in the first function parameter. 
-The function *tagPromptlyDyn* *lifts* the Dynamic onto the Event.
+The function *tagPromptlyDyn* *lifts* the Dynamic value onto the Event.
 
 ### Function *holdDyn*
 
@@ -1035,7 +1035,7 @@ We have to specify a default value, to be used before the first event occurs.
 
 Look at the last two lines in the file *src/textinput03.hs*:
 
-* *evText* is the event with the contents of the TextInput as payload
+* *evText* is the event that carries the contents of the TextInput as payload
 * With the function *holdDyn* we create a Dynamic. Its value changes on each click on the button.
 
 
@@ -1059,8 +1059,8 @@ bodyElement = do
 
 ## Reading out the Value of a TextInput Widget on Pressing the *Return* Key
 
-Sometimes you want to use the text of the TextInput but, when the user presses the *Return/Enter* key
-inside the TextInput widget. 
+Sometimes you want to use the text of the TextInput widget when the user presses the *Return/Enter* key
+inside the widget. 
 
 ### Function *keypress*
 
@@ -1196,7 +1196,7 @@ As mentioned above, here the function *value* is used with the type signature: `
 
 This is the most simple way to create and use a checkbox. However, you have to click exactly into 
 the small square to change the state of the checkbox. When you click at the label *Click me* it does not
-change it's state. This is very user unfriendly!
+change it's state. This is not user friendly!
 
 ### Example *src/checkbox02.hs*
 
@@ -1721,8 +1721,6 @@ Comments:
 * Again we use event transformation.
 * We use the reflex function *holdDyn* to convert an Event to a Dynamic value.
 
-
-
 # Timers
 
 A timer will send you always an event after a predefined amount of time has expired. Reflex-dom has two timer functions *tickLossy* and *tickLossyFrom*. The function *tickLossyFrom* is used only in applications where you need several parallel timers. Normally you will use *tickLossy*. It will start sending events immediately after the startup of your application. It has the following type
@@ -1734,7 +1732,7 @@ The types *NominalDiffTime* and *UTCTime* are defined in the basic GHC library *
 The first parameter *NominalDiffTime* is the length of the time interval between two events. It is measured in seconds. The second parameter is an UTCTime. I never really found out what it's used for.
 You can give an arbitrary data-time field. Normally I use current time.
 
-The result is a series of Events. Their paylod is the data structure *TickInfo*:
+The result is a series of Events. Their payload is the data structure *TickInfo*:
 
 ~~~ { .haskell }
 data TickInfo
@@ -1869,7 +1867,6 @@ data XhrException = XhrException_Error
 To keep my examples small, I'll only use *performRequestAsync*.
 
 
-
 ### Function *getPostBuild*
 
 This is a little helper function we use in the next example. It has the type: 
@@ -1981,7 +1978,7 @@ checkXhrRsp evRsp = (evOk, evRsp)
 
 Remarks:
 
-* Ok, in a prefessional environnment you would replace the hardcoded number *200* with a nice constant.
+* Ok, in a professional environnment you would replace the hardcoded number *200* with a nice constant.
 * I asked *ghci* to tell me the type signature of the function *checkXhrRsp*.
 * *Event Filtering* is one of the powerful methods used in reflex-dom programs.
 
