@@ -827,7 +827,7 @@ bodyElement = do
    return ()
 ~~~
 
-Using function application as a fold function over a current value is very powerful!! W'll see more examples.
+Using function application as a fold function over a current value is very powerful!! We'll see more examples.
 
 # Predefined Input Widgets
 
@@ -1825,7 +1825,7 @@ To send a request to the server, we use the function
 
 ```performRequestAsync :: (...) => Event t (XhrRequest a) -> m (Event t XhrResponse)```
 
-So we have to pack a XhrRequest into an Event. Of course w'll again use event transfomation to accomplish this.
+So we have to pack a XhrRequest into an Event. Of course we'll again use event transfomation to accomplish this.
 Sending the request does not block our reflex-dom frontend. When the response arrives from the server, we just get an 'Event t XhrRespone'
 
 The data type XhrResponse is defined as:
@@ -1878,7 +1878,7 @@ It generates a single event at the time the HTML page has been created. It's sim
 
 # Swiss Meteo Data Example 1
 
-As an example server w'll use a Web service, that returns the measuement data of the last 10 minutes of automatic metoe stations. This Web service has some advantages:
+As an example server we'll use a Web service, that returns the measuement data of the last 10 minutes of automatic metoe stations. This Web service has some advantages:
 
 * You can just use this service. It's not necessary to register with your e-mail address.
 * It's very simple: There are only 2 different requests and responses.
