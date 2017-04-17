@@ -873,7 +873,7 @@ The function to create a text input element is:
 
 ```textInput :: (...) => TextInputConfig t -> m (TextInput t)```
 
-### The type class Default
+### The Type Class Default
 
 The Haskell library *data-default-class* defines a type class *Default* to initialize a data type with default values:
 
@@ -898,14 +898,14 @@ instance Reflex t => Default (TextInputConfig t) where
 
 We will see more configuration records. They are all instances of the type class *Default*.
 
-### The function *never*
+### The Function *never*
 
 ``` never :: Event t a```
 
 It's an event, that never occurs.
 
 
-### The function *constDyn*
+### The Function *constDyn*
 
 Note the type of the _textInputConfig_attributes: It's ```Dynamic t (Map Text Text)```.
 To create a Dynamic map we can use the function *constDyn*: 
@@ -1012,6 +1012,79 @@ bodyElement = do
   dynText $ _textInput_value t6
   
   return ()
+~~~
+
+## Reading out the Value of a TextInput Widget on an Event
+
+In all the above examples we used the contents of the TextInput field immediately when it changed.
+Sometimes you want to use this contents when the user clicks a button.
+
+### Function *tagPromptlyDyn*
+
+```tagPromptlyDyn :: Reflex t => Dynamic t a -> Event t b -> Event t a```
+
+When the event in the second function parameter occurs, the function returns a new event with the payload of the Dynamic value in the first function parameter. 
+The function *tagPromptlyDyn* *lifts* the Dynamic onto the Event.
+
+### Function *holdDyn*
+
+```holdDyn :: (...) => a -> Event t a -> m (Dynamic t a)```
+
+It converts an Event with a payload of type *a* into a Dynamic with the same value. 
+We have to specify a default value, to be used before the first event occurs.
+
+Look at the last two lines in the file *src/textinput03.hs*:
+
+* *evText* is the event with the contents of the TextInput as payload
+* With the function *holdDyn* we create a Dynamic. Its value changes on each click on the button.
+
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+
+main :: IO ()
+main = mainWidget bodyElement
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+  el "h2" $ text "Text Input - Read Value on Button Click"
+  ti <- textInput def
+  evClick <- button "Click Me"
+  el "br" blank
+  text "Contents of TextInput on last click: "
+  let evText = tagPromptlyDyn (value ti) evClick
+  dynText =<< holdDyn "" evText
+~~~ 
+
+## Reading out the Value of a TextInput Widget on Pressing the *Return* Key
+
+Sometimes you want to use the text of the TextInput but, when the user presses the *Return/Enter* key
+inside the TextInput widget. 
+
+### Function *keypress*
+
+```keypress :: (...) => Key -> e -> Event t ()```
+
+Instead of the button, we use this function to create the event that triggers reading the TextInput value:
+
+The code in *src/textinput04.hs* is similar to the example above:
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex.Dom
+
+main :: IO ()
+main = mainWidget bodyElement
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
+  el "h2" $ text "Text Input - Read Value on 'Enter'"
+  ti <- textInput def
+  el "br" blank
+  text "Contents of TextInput after 'Enter': "
+  let evEnter = keypress Enter ti
+  let evText = tagPromptlyDyn (value ti) evEnter
+  dynText =<< holdDyn "" evText
 ~~~
 
 ## TextAreas
@@ -1646,16 +1719,9 @@ Comments:
 * Similar to the checkbox example, these radio buttons are userfriendly. You can click on the circle or on the label.
 * Depending on the checked radio button, the background color of the whole radio button changes.
 * Again we use event transformation.
-* We use the reflex function *holdDyn* to create a Dynamic value. I describe it just below:
+* We use the reflex function *holdDyn* to convert an Event to a Dynamic value.
 
-### The Function *holdDyn*
 
-The function *holdDyn* has the following type: 
-
-```holdDyn :: (...) => a -> Event t a -> m (Dynamic t a)```
-
-It converts an Event with a payload of type *a* into a Dynamic with the same value. 
-We have to specify a default value, to be used before the first event occurs.
 
 # Timers
 
@@ -1802,13 +1868,7 @@ data XhrException = XhrException_Error
 
 To keep my examples small, I'll only use *performRequestAsync*.
 
-### Function *tagPromptlyDyn*
 
-If we have a TextInput field with some data (eg a name or a credit card number), this data normally lives in a *Dynamic*. To send this data to the server, we have to *lift* it into an Event. The function *tagPromptlyDyn* will exactly do this. It has the type: 
-
-```tagPromptlyDyn :: Reflex t => Dynamic t a -> Event t b -> Event t a```
-
-When the *Event t b* occurs, it creates a new event with the payload of the Dynamic value.
 
 ### Function *getPostBuild*
 
@@ -1835,7 +1895,7 @@ For the first example we use a dropdown with a fixed list of stations:
 * Zermatt, the world fameous mountain resort at the bottom of the Matterhorn: [http://www.zermatt.ch/en](http://www.zermatt.ch/en)
 * Binn, a small and very lovely mountain village, far off mainstream tourism: [http://www.landschaftspark-binntal.ch/en/meta/fotogalerie.php](http://www.landschaftspark-binntal.ch/en/meta/fotogalerie.php)
 
-Every meteo station has a 3-letter code eg "BER" for Bern. We send this 3-letter code to the server and it returns a JSON string wih the measured data. To start, we just show this JSON string as it is, withour any nice formatting.
+Every meteo station has a 3-letter code eg "BER" for Bern. We send this 3-letter code to the server and it returns a JSON string wih the measured data. To start, we just show this JSON string as it is, without any nice formatting.
 
 The code is in the file *src/xhr01.hs*:
 
@@ -1874,7 +1934,7 @@ stations = Map.fromList [("BIN", "Binn"), ("BER", "Bern"), ("KLO", "Zurich airpo
 
 Comments:
 
-* We use *tagPromptlyDyn* to lift the 3-letter code from the dropdown into an Event.
+* We use *tagPromptlyDyn* to lift the 3-letter code from the dropdown onto an event.
 * Then we use this event to create a new event with the XhrRequest.
 * With the function *performRequestAsync* we send this XhrRequest to the server. 
 * We send a request immediately after startup and every time the value of the dropdown changes.
