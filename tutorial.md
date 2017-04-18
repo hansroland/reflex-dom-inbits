@@ -1059,7 +1059,7 @@ bodyElement = do
 
 ## Reading out the Value of a TextInput Widget on Pressing the *Return* Key
 
-Sometimes you want to use the text of the TextInput widget when the user presses the *Return/Enter* key
+Sometimes you want to use the text in the TextInput widget when the user presses the *Return/Enter* key
 inside the widget. 
 
 ### Function *keypress*
@@ -1069,6 +1069,7 @@ inside the widget.
 Instead of the button, we use this function to create the event that triggers reading the TextInput value:
 
 The code in *src/textinput04.hs* is similar to the example above:
+
 ~~~ { .haskell }
 {-# LANGUAGE OverloadedStrings #-}
 import Reflex.Dom
@@ -1086,6 +1087,70 @@ bodyElement = do
   let evText = tagPromptlyDyn (value ti) evEnter
   dynText =<< holdDyn "" evText
 ~~~
+
+## Setting the Contents of a TextInput Widget
+
+Sometimes you want to set the text in the TextInput widget with the value of an Dynamic t T.Text.
+Remember, reflex-dom is Haskell and we cannot set the value of a widget *somewhere* in the code.
+We have to specify this, when we define the widget in our code.
+
+Using the syntactic sugar of the lens library is the easiest way to set the value of a TextInput widget:
+
+```ti <- textInput $ def & setValue .~ evText```
+
+Here the value *evText* has the type ```Event t T.Text```. The text payload of this event will be written
+into the TextInput widget. That's it! 
+
+If you are not familiar with lenses, just take this as a syntax construct.
+
+File *src/textinput05.hs* has the example:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+import           Reflex.Dom 
+import qualified Data.Text as T
+
+main :: IO ()
+main = mainWidget body
+         
+body :: MonadWidget t m => m ()
+body = do
+  el "h1" $ text "Write into TextInput Widget"
+  t1 <- textInput def
+  evCopy <- button ">>>"
+  let evText = tagPromptlyDyn (value t1) evCopy
+  t2 <- textInput $ def & setValue .~ evText
+  return ()
+~~~
+
+We define two TextInput widgets and a button in between. Clicking the button
+generates the event *evCopy* with a unit *()* as payload. 
+Then we use the function *tagPromptlyDyn* to create a new event *evText*, with
+the value of the first textbox as payload. In the definition of the second TextInput widget we 
+use this event to set the text of the second textbox.
+
+Sometimes you want to have a *Reset* button to clear TextInput widgets. This is now easy: 
+We use event transformation to create an event with an empty text. The code is in *src/textinput06.hs*:
+
+~~~ { .haskell }
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecursiveDo #-}
+import           Reflex.Dom 
+import qualified Data.Text as T
+
+main :: IO ()
+main = mainWidget body
+         
+body :: MonadWidget t m => m ()
+body = do
+  rec el "h1" $ text "Clear TextInput Widget"
+      ti <- textInput $ def & setValue .~ ("" <$ evReset)
+      evReset <- button "Reset"
+  return ()
+~~~
+
+We use *recursive do* because we define the Reset button after the TextInput widget.
+
 
 ## TextAreas
 
