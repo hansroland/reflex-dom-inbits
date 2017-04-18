@@ -1825,7 +1825,7 @@ To send a request to the server, we use the function
 
 ```performRequestAsync :: (...) => Event t (XhrRequest a) -> m (Event t XhrResponse)```
 
-So we have to pack a XhrRequest into an Event. Of course we'll again use event transfomation to accomplish this.
+So we have to pack a XhrRequest into an Event. Of course we'll again use event transformation to accomplish this.
 Sending the request does not block our reflex-dom frontend. When the response arrives from the server, we just get an 'Event t XhrRespone'
 
 The data type XhrResponse is defined as:
@@ -1878,7 +1878,7 @@ It generates a single event at the time the HTML page has been created. It's sim
 
 # Swiss Meteo Data Example 1
 
-As an example server we'll use a Web service, that returns the measuement data of the last 10 minutes of automatic metoe stations. This Web service has some advantages:
+As an example server we'll use a Web service, that returns the measurement data of the last 10 minutes of automatic meteo stations. This Web service has some advantages:
 
 * You can just use this service. It's not necessary to register with your e-mail address.
 * It's very simple: There are only 2 different requests and responses.
@@ -1889,7 +1889,7 @@ For the first example we use a dropdown with a fixed list of stations:
 * Bern the captal: [http://www.bern.com/en](http://www.bern.com/en)
 * Zurich, the main city: [https://www.zuerich.com/en](https://www.zuerich.com/en)
 * Jungfraujoch, called *Top of Europe* with 3454 meters above sea level really high in the Swiss mountains [https://www.jungfrau.ch/en-gb/](https://www.jungfrau.ch/en-gb/)
-* Zermatt, the world fameous mountain resort at the bottom of the Matterhorn: [http://www.zermatt.ch/en](http://www.zermatt.ch/en)
+* Zermatt, the world famous mountain resort at the bottom of the Matterhorn: [http://www.zermatt.ch/en](http://www.zermatt.ch/en)
 * Binn, a small and very lovely mountain village, far off mainstream tourism: [http://www.landschaftspark-binntal.ch/en/meta/fotogalerie.php](http://www.landschaftspark-binntal.ch/en/meta/fotogalerie.php)
 
 Every meteo station has a 3-letter code eg "BER" for Bern. We send this 3-letter code to the server and it returns a JSON string wih the measured data. To start, we just show this JSON string as it is, without any nice formatting.
@@ -2053,7 +2053,7 @@ So with *return* I wrap the *fmapMaybe decodeXhrResponse evRsp* into the monad a
 
 ```evSmnRec :: (Event t SmnRecord) <- return $  fmapMaybe decodeXhrResponse evRsp```
 
-Note: In our situation the scoped type varaible is not really necessary, because we nicely type annoteted all functions.
+Note: In our situation the scoped type varaible is not really necessary, because we nicely type annotated all functions.
 However in a lot of situations you may have to give help to the compiler.
 
 The function *decodeXhrResponse* returns a *Maybe (Event t SmnRecord)*. 
@@ -2149,7 +2149,7 @@ tShow Nothing = ""
 tShow (Just x) = (T.pack . show) x
 ~~~
 
-Note: With the function *tabDisplay* the number of tabs is fix. You cannot change it during run time.
+Note: With the function *tabDisplay* the number of tabs is fixed. You cannot change it during run time.
 
 # Swiss Meteo Data Example 3
 
