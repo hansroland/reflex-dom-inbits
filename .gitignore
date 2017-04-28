@@ -17,4 +17,6 @@ cabal.config
 *.jsexe
 *.js_hi
 *.js_o
+*.js_dyn_hi
+*.js_dyn_o
 
