@@ -2035,7 +2035,7 @@ where
 ~~~ { .haskell }
 -- | Split up good and bad response events
 checkXhrRsp :: FunctorMaybe f => f XhrResponse -> (f XhrResponse, f XhrResponse)
-checkXhrRsp evRsp = (evOk, evRsp)
+checkXhrRsp evRsp = (evOk, evErr)
   where
     evOk = ffilter (\rsp -> _xhrResponse_status rsp == 200) evRsp
     evErr = ffilter (\rsp -> _xhrResponse_status rsp /= 200) evRsp
@@ -2056,7 +2056,7 @@ For this we have our data type *Page* with an enumeration of our pages.
 Again we use *foldDyn* with function application. The last event sets the value of *dynPage*:
 
 ~~~ { .haskell }
-dynPage <- foldDyn ($) PageData $ leftmost [const PageData <$ evOk, const PageErr <$ evErr]
+dynPage <- foldDyn ($) PageData $ leftmost [const PageData <$ evOk, const PageError <$ evErr]
 ~~~
 
 For each of our pages we write an own function to display the data. As parameters we use
