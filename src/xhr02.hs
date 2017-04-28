@@ -55,7 +55,7 @@ pageErr evErr dynPage = do
 
 -- | Split up good and bad response events
 checkXhrRsp :: FunctorMaybe f => f XhrResponse -> (f XhrResponse, f XhrResponse)
-checkXhrRsp evRsp = (evOk, evRsp)
+checkXhrRsp evRsp = (evOk, evErr)
   where
     evOk = ffilter (\rsp -> _xhrResponse_status rsp == 200) evRsp
     evErr = ffilter (\rsp -> _xhrResponse_status rsp /= 200) evRsp
