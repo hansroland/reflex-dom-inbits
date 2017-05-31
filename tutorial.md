@@ -467,7 +467,7 @@ attrs :: Map.Map T.Text T.Text
 attrs = ("target" =: "_blank") <> ("href" =: "http://google.com")
 ~~~
 
-The library Data.Map defines a little helper function (=:) to create a singelton Map.
+The module Reflex.Dom defines a little helper function (=:) to create a singelton Map.
 
 ```(=:) :: k -> a -> Map k a```
 
