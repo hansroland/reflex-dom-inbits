@@ -1675,7 +1675,7 @@ Reflex-dom uses some advanced type hackery like TypeFamilies to create events of
 * ```domEvent Click e``` returns an event of type *()*
 * ```domEvent Mousedown e``` returns an event of type *(Int,Int)* with the mouse coordinates.
 
-This is defined in the module [Reflex.Dom.Builder.Class.Events](https://github.com/reflex-frp/reflex-dom/blob/develop/src/Reflex/Dom/Builder/Class/Events.hs):
+This is defined in the module [Reflex.Dom.Builder.Class.Events](https://github.com/reflex-frp/reflex-dom/blob/develop/reflex-dom-core/src/Reflex/Dom/Builder/Class/Events.hs):
 
 * The data type *EventName* lists the possible event names.
 * The type family *EventResultType* defines the type of the resulting event.
