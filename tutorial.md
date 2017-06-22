@@ -1786,6 +1786,74 @@ Comments:
 * Again we use event transformation.
 * We use the reflex function *holdDyn* to convert an Event to a Dynamic value.
 
+# Tracing Events
+
+In a reflex-dom program a lot of code works with events. 
+In big programs you may get lost. To help you out, there are two reflex
+functions *traceEvent* and *traceEventWith* that allow you to trace events. 
+
+The function *traceEvent* has the following type:
+
+```traceEvent :: (Reflex t, Show a) => String -> Event t a -> Event t a```
+
+It takes a String (not a *Text*!) and an Event with a payload of type *a* and returns a new
+unmodified Event with the same payload. 
+The type *a* must have a *Show* instance.
+When the event occurs, it prints the string and the payload of the event using the *show* function.
+
+If the type of your payload is not an instance of *Show* or the string produced by the *show* function 
+is far to long you can use the *traceEventWith* function. It has the type:
+
+```traceEventWith :: Reflex t => (a -> String) -> Event t a -> Event t a```
+
+Instead of using the *Show* instance, you provide a custom function to get a string representation
+of the payload.
+
+In the reflex source code both functions have the following comment:
+
+```
+-- Note: As with Debug.Trace.trace, the message will only be printed if the
+-- 'Event' is actually used.
+```
+It's not specified explicitely, but you have to use / consume the **new** event returned by the *traceEvent*/*traceEventWith* function.
+
+Let's add tracing to the above radio button example. Here I show only the *bodyElement* function, 
+the rest is unmodified. The full code is in *src/trace01.hs*.
+
+~~~ { .haskell }
+bodyElement =  el "div" $ do
+  rec
+    el "h2" $ text "Some Tracing"
+    let group = "g"
+    let dynAttrs = styleMap <$> dynColor
+    evRad1 <- radioBtn "orange" group Orange dynAttrs
+    evRad2 <- radioBtn "green" group Green dynAttrs
+    evRad3 <- radioBtn "red" group Red dynAttrs
+    let evRadio = (T.pack . show) <$> leftmost [evRad1, evRad2, evRad3]
+
+    -- added line
+    let evRadioT = traceEvent ("Clicked rb in group " <> T.unpack group) evRadio
+
+    -- modified line: evRadioT instead of evRadio 
+    dynColor <- holdDyn "lightgrey" evRadioT
+
+  return ()
+~~~
+
+Here is an example of my test output (from WebkitGtk):
+
+```
+Clicked radio button in group g: "Orange"
+Clicked radio button in group g: "Green"
+Clicked radio button in group g: "Red"
+```
+
+* If you use a browser, you can see the trace output in your browser-console.
+* If you use WebkitGtk, the trace output is routed to *stderr*.
+* Look at the modified line staring with ```dynColor```:  If you change back to the event *evRadio*
+tracing will no longer work. You **have** to use *evRadio**T***  returned by the *traceEvent* function!!
+
+
 # Timers
 
 A timer will send you always an event after a predefined amount of time has expired. Reflex-dom has two timer functions *tickLossy* and *tickLossyFrom*. The function *tickLossyFrom* is used only in applications where you need several parallel timers. Normally you will use *tickLossy*. It will start sending events immediately after the startup of your application. It has the following type
