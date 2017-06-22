@@ -368,7 +368,7 @@ This function has the type signature:
 ```el :: (...) => Text -> m a -> m a```
 
 It takes a text string with the HTML-type of the DOM element as a first parameter. 
-The second parameter is either the text of the element or a child element.
+The second parameter is either the text of the element or a valid child element.
 
 The file *src/dom01.hs* contains a typical first example and shows basic usage of the function *el*:
 
@@ -494,10 +494,10 @@ In HTML:
 
 ## Function: *elDynAttr*
 
-All the above functions allow us to define static DOM elements. 
-But you cannot change them while the program is running!
+All the above functions allow us to define DOM elements with static attributes. 
+But you cannot change the attributes while the program is running!
 
-With the function *elDynAttr*, as the name says, you can specify attributes, 
+With the function *elDynAttr*, as the name says, you can specify dynamic attributes, 
 that change during program execution. It has the following type:
 
 ```elDynAttr  :: (...) => Text -> Dynamic t (Map Text Text) -> m a -> m a```
