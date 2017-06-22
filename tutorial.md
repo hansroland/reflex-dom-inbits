@@ -1786,11 +1786,13 @@ Comments:
 * Again we use event transformation.
 * We use the reflex function *holdDyn* to convert an Event to a Dynamic value.
 
-# Tracing Events
+# Debugging
+
+## Tracing Events
 
 In a reflex-dom program a lot of code works with events. 
 In big programs you may get lost. To help you out, there are two reflex
-functions *traceEvent* and *traceEventWith* that allow you to trace events. 
+functions *traceEvent* and *traceEventWith*. They allow you to trace events. 
 
 The function *traceEvent* has the following type:
 
@@ -1799,7 +1801,7 @@ The function *traceEvent* has the following type:
 It takes a String (not a *Text*!) and an Event with a payload of type *a* and returns a new
 unmodified Event with the same payload. 
 The type *a* must have a *Show* instance.
-When the event occurs, it prints the string and the payload of the event using the *show* function.
+When the event occurs, it creates a trace entry with the string and the payload of the event using the *show* function.
 
 If the type of your payload is not an instance of *Show* or the string produced by the *show* function 
 is far to long you can use the *traceEventWith* function. It has the type:
@@ -1815,7 +1817,8 @@ In the reflex source code both functions have the following comment:
 -- Note: As with Debug.Trace.trace, the message will only be printed if the
 -- 'Event' is actually used.
 ```
-It's not specified explicitely, but you have to use / consume the **new** event returned by the *traceEvent*/*traceEventWith* function.
+It's not specified explicitely, but you have to use / consume the **new** event returned by the *traceEvent*/*traceEventWith* function. *Use* or *consume* the event means, that this event or a
+transformed child event must finally have some effect in the DOM.
 
 Let's add tracing to the above radio button example. Here I show only the *bodyElement* function, 
 the rest is unmodified. The full code is in *src/trace01.hs*.
@@ -1831,7 +1834,7 @@ bodyElement =  el "div" $ do
     evRad3 <- radioBtn "red" group Red dynAttrs
     let evRadio = (T.pack . show) <$> leftmost [evRad1, evRad2, evRad3]
 
-    -- added line
+    -- added line:
     let evRadioT = traceEvent ("Clicked rb in group " <> T.unpack group) evRadio
 
     -- modified line: evRadioT instead of evRadio 
@@ -1853,6 +1856,17 @@ Clicked radio button in group g: "Red"
 * Look at the modified line staring with ```dynColor```:  If you change back to the event *evRadio*
 tracing will no longer work. You **have** to use *evRadio**T***  returned by the *traceEvent* function!!
 
+## Tracing Changes of Dynamics
+
+Similar to Events you can also trace Dynamics. 
+The names and types of the functions are:
+
+```traceDyn :: (Reflex t, Show a) => String -> Dynamic t a -> Dynamic t a```
+
+```traceDynWith :: Reflex t => (a -> String) -> Dynamic t a -> Dynamic t a```
+
+They work similar to the *traceEvent* and *traceEventWith* functions. Everytime the Dynamic value
+changes a trace entry will be created. Also the new created Dynamic value must finally be used for an effect in the DOM.
 
 # Timers
 
