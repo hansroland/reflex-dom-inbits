@@ -2398,8 +2398,9 @@ use CSS to make it easier to look at the screens etc, etc.
 * Ryan Trinkle: Reflex - Practical Functional Reactive Programming, NYC Haskell User's Group, Part 1 [https://www.youtube.com/watch?v=mYvkcskJbc4](https://www.youtube.com/watch?v=mYvkcskJbc4)
 * Ryan Trinkle: Reflex - Practical Functional Reactive Programming, NYC Haskell User's Group, Part 2 [https://www.youtube.com/watch?v=3qfc9XFVo2c](https://www.youtube.com/watch?v=3qfc9XFVo2c)
 * Niklas Hambüchen: FRP browser programming with Reflex, HaskellerZ meetup, Zürich [https://www.youtube.com/watch?v=dNGClNsnn24&t=2s](https://www.youtube.com/watch?v=dNGClNsnn24&t=2s)
-* Modular Web Snippets with Reflex [https://www.youtube.com/watch?v=8nMC2jL2iUY](https://www.youtube.com/watch?v=8nMC2jL2iUY)
-* On Reflex - Boston Haskell - Greg Hale [https://www.youtube.com/watch?v=MfXxuy_CJSk]()
+* Doug Beardsley: Modular Web Snippets with Reflex [https://www.youtube.com/watch?v=8nMC2jL2iUY](https://www.youtube.com/watch?v=8nMC2jL2iUY)
+* Greg Hale: On Reflex - Boston Haskell [https://www.youtube.com/watch?v=MfXxuy_CJSk](https://www.youtube.com/watch?v=MfXxuy_CJSk)
+* Doug Beardsley: Real Word Reflex [http://mightybyte.net/real-world-reflex/index.html](http://mightybyte.net/real-world-reflex/index.html)
 
 ## Main Libraries
 
@@ -2407,12 +2408,16 @@ use CSS to make it easier to look at the screens etc, etc.
 
 ## Documentation
 
-* Read the Docs [http://reflex-frp.readthedocs.io/en/latest/](http://reflex-frp.readthedocs.io/en/latest/)
+* Reflex [http://reflex-frp.github.io/reflex-frp.org/](http://reflex-frp.github.io/reflex-frp.org/)
 
 ## Cheat Sheets
 
 * Cheat Sheet Reflex [https://github.com/reflex-frp/reflex/blob/develop/Quickref.md](https://github.com/reflex-frp/reflex/blob/develop/Quickref.md)
 * Cheat Sheet Reflex.Dom [https://github.com/reflex-frp/reflex-dom/blob/develop/Quickref.md](https://github.com/reflex-frp/reflex-dom/blob/develop/Quickref.md)
+
+## Reddit
+
+* [https://www.reddit.com/r/reflexfrp/new/](https://www.reddit.com/r/reflexfrp/new/)
 
 ## Stackoverflow
 
