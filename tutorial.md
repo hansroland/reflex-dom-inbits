@@ -2290,7 +2290,7 @@ dispMeteoField label rend evRec = do
   return ()
 
 -- | Small helper function to convert showable values wrapped in Maybe to T.Text. 
--- You should use the test-show library from Hackage!! 
+-- You should use the text-show library from Hackage!! 
 tShow :: Show a => Maybe a -> T.Text
 tShow Nothing = ""
 tShow (Just x) = (T.pack . show) x
@@ -2322,7 +2322,7 @@ Reflex-Dom has a helper function *switchPromptlyDyn* with the following type:
 
 ```switchPromptlyDyn :: Reflex t => Dynamic t (Event t a) -> Event t a```
 
-It just unwraps an Event out of a Dynmaic.
+It just unwraps an Event out of a Dynamic.
 
 ## Function *simpleList*
 
