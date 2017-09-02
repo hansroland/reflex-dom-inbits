@@ -32,12 +32,6 @@ packages:
     git: https://github.com/reflex-frp/reflex-dom-contrib
     commit: df4138406a5489acd72cf6c9e88988f13da02b31 # b4ac9378318ee71a109faef5860cccd9231bc7bd
   extra-dep: true
-- location:
-    git: https://github.com/hansroland/opench
-    commit: ddcb5119a15f2729bc5fe400e52653cedbee104a
-  subdirs:
-  - meteo
-  extra-dep: true
 
 extra-deps:
 - tz-0.1.2.0
@@ -46,4 +40,4 @@ extra-deps:
 - ref-tf-0.4.0.1
 - prim-uniq-0.1.0.1
 - zenc-0.1.1
-
+- opench-meteo-0.1.1.0
