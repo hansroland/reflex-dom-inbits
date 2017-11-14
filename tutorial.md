@@ -2423,6 +2423,10 @@ use CSS to make it easier to look at the screens etc, etc.
 
 * Questions tagged reflex [http://stackoverflow.com/questions/tagged/reflex?sort=newest&pageSize=15](http://stackoverflow.com/questions/tagged/reflex?sort=newest&pageSize=15)
 
+## Tutorials
+
+* Queensland FP Lab blog series: An Introduction to reflex [https://qfpl.io/posts/reflex/basics/introduction/](https://qfpl.io/posts/reflex/basics/introduction/)
+
 
 ## Other Libraries / Projects
 
