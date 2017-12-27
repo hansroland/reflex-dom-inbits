@@ -2070,7 +2070,7 @@ body  = el "div" $ do
   return ()
 
 buildReq :: T.Text -> XhrRequest ()
-buildReq code = XhrRequest "GET" ("http://opendata.netcetera.com:80/smn/smn/" <> code) def
+buildReq code = XhrRequest "GET" ("https://opendata.netcetera.com/smn/smn/" <> code) def
 
 stations :: Map.Map T.Text T.Text
 stations = Map.fromList [("BIN", "Binn"), ("BER", "Bern"), ("KLO", "Zurich airport"), ("ZER", "Zermatt"), ("JUN", "Jungfraujoch")]
