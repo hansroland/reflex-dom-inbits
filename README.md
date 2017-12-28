@@ -18,6 +18,7 @@ on *Cascaded Style Sheets* (*CSS*). Of course, the more experience you have, the
 Start by cloning this repository with ``` git clone https://github.com/hansroland/reflex-dom-inbits ```.
 Continue by installing Reflex.Dom. The preferred installation method is to use
 the reflex-platform from [https://github.com/reflex-frp/reflex-platform](https://github.com/reflex-frp/reflex-platform).
-Alternatively you can use stack, however, this will take a long time.
+Alternatively you can use stack, however, this will take a long time. If you use stack, I recommend
+to use version 1.24.0.2 of cabal. I was unable to run _stack setup_ with cabal 2.0.0.0.
 
 Then read the file [tutorial.md](tutorial.md).

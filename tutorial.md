@@ -308,13 +308,16 @@ Now it's easy to understand the whole line *mainWidget $ display =<< count =<< b
 
 ## Running the Program in the Browser
 
-If you have installed *reflex-platform* do the following to run the program *src/count01.hs* in the browser:
+If you installed *reflex-platform* do the following to run the program *src/count01.hs* in the browser:
 
 * Navigate into your *reflex-platform* directory.
 * Start the nix-shell by typing ``` ./try-reflex ``` (The first time this may take some time...)
 * In the nix-shell, navigate into your *reflex-dom-inbits* directory. You can use normal linux *cd* commands.
 * Compile the program with ``` ghcjs src/count01.hs```
 * Open the resulting *src/count01.jsexe/index.html* file with your browser. eg ``` chromium src/count01.jsexe/index.html```
+
+If you installed reflex with *stack*, use the command ```stack exec ghcjs src/count01.hs``` and then
+open the resulting *src/count01.jsexe/index.html* file with your browser as described above.
 
 Unfortunately interactive ghcjs does not yet work, if the ghcjs compiler was compiled with GHC 8.0.
 
@@ -2180,6 +2183,7 @@ For this we use the popular *aeson* library. We need a data structure that corre
 The library *opench-meteo* contains Haskell definitons for the Swiss meteo data and the instances of the 
 *FromJSON* type class. You can find this library on [Hackage](http://hackage.haskell.org/package/opench-meteo)
 or on [https://github.com/hansroland/opench/tree/master/meteo](https://github.com/hansroland/opench/tree/master/meteo).
+You must use version 0.2.0.0 or higher. Version 0.1.* used _http_, but the now server expects a _https_ request.
 
 We need to import this library: ```import Data.Meteo.Swiss```.
 

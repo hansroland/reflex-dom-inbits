@@ -40,4 +40,4 @@ extra-deps:
 - ref-tf-0.4.0.1
 - prim-uniq-0.1.0.1
 - zenc-0.1.1
-- opench-meteo-0.1.1.0
+- opench-meteo-0.2.0.0
