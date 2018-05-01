@@ -1,5 +1,11 @@
 # reflex-dom-inbits - A beginner friendly step by step tutorial for reflex-dom
 
+[![License BSD3][badge-license]][license]
+
+[badge-license]: https://img.shields.io/badge/license-BSD3-green.svg?dummy
+[license]: https://github.com/hansroland/reflex-dom-inbits/blob/master/LICENSE
+
+
 This is a beginner-friendly tutorial for *reflex-dom*. It shows how to write Haskell programs  with a graphical user interface.
 It contains an introductionary text and examples in short bits.
 
