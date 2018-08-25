@@ -513,7 +513,7 @@ Reflex has several functions to create Dynamic values. As a first example, we wi
 
 ```toggle :: (...) => Bool -> Event t a -> m (Dynamic t Bool)```
 
-The function toogle create a new Dynamic using the first parameter as the initial value
+The function toggle create a new Dynamic using the first parameter as the initial value
 and flips this boolean value every time the event in the second parameter occurs.
 
 The file *src/dom04.hs* contains an example for the function *elDynAttr*:
