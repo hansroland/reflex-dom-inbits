@@ -139,20 +139,8 @@ It is very common to use applicative syntax when working with Dynamics.
 
 ## Used Library Versions
 
-Today Hackage has reflex version 0.4 and reflex-dom version 0.3. 
-However for both libraries there are newer and much better versions on Github: [reflex-0.5](https://github.com/reflex-frp/reflex) and 
-[reflex-dom.0.4](https://github.com/reflex-frp/reflex-dom)
-
-The main improvements of the Github versions are:
-
-* Use the *text* library with the data type *Text* instead of the data type *String*. This gives performance.
-* Data type *Event* is now a Functor. 
-* Data type *Dynamic* is a Monad.
-
-The last 2 changes make the programs much simpler!
-
-In this tutorial, we will use the newer library versions reflex-dom-0.4 and reflex-0.5 from Github. 
-Unfortunately most of the examples will not compile with reflex-dom-0.3!
+In this tutorial, we will use reflex-dom-0.4 and reflex-0.5 both of which are available on Hackage. 
+Unfortunately most of the examples will not compile with earlier versions of reflex-dom!
 
 If you used the *reflex-platform* to install reflex and reflex-dom, you will have the newer versions. 
  
