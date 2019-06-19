@@ -610,6 +610,7 @@ and re-deploy your application.
 * The path to the css file (*css/simple.css* in the above example) is used by the compiler and therefore relative to your working
 directory during compile time. I assume that your working directory is *reflex-dom-inbits*.
 * If the css file does not exist, or the path is wrong, you will get an error during compile time.
+* You can ignore the warning *The constraint ‘MonadWidget t m’ matches an instance declaration...*. Later if necessary you can replace MonadWiget with fine-grained constraints.
 
 ## Function *mainWidgetWithHead*
 
