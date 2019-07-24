@@ -1453,7 +1453,7 @@ import           Reflex.Dom
 import qualified Data.Text as T
 import qualified Data.Map as Map
 import           Data.Monoid((<>))
-import           Data.Maybe (fromJust)extInpu
+import           Data.Maybe (fromJust)
 
 main :: IO ()
 main = mainWidget bodyElement 
