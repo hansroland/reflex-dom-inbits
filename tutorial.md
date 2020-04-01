@@ -11,7 +11,7 @@ These callbacks need a lot of global state and in Haskell managing state is not 
 
 To solve these problems the Haskell community developed a lot of new new ideas. 
 One of them is called *Functional Reactive Programming*, *FRP* for short. 
-Conal Elliott and Paul Hudak first developed the basic ideas and published them in 2007 in the paper [Functional Reactive Animation](http://conal.net/papers/icfp97/).
+Conal Elliott and Paul Hudak first developed the basic ideas and published them in 1997 in the paper [Functional Reactive Animation](http://conal.net/papers/icfp97/).
 On Hackage you can find a lot
 of different FRP libraries, eg *elera*, *frpnow*, *grapefruit-frp*, *netwire*, *reactive-banana*, *reflex* and many more.
 
