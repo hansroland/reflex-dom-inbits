@@ -728,7 +728,7 @@ To combine the events of the 2 buttons we use the function *leftmost*:
 ```leftmost :: Reflex t => [Event t a] -> Event t a```
 
 If an event in the array of the first parameter occurs, the function *leftmost* returns this event. 
-If two ore more events in the array occur simultaneously, 
+If two or more events in the array occur simultaneously, 
 the function *leftmost* returns the leftmost of all the simultaneously occuring events.
 
 File *src/event02.hs* contains the example:
@@ -754,8 +754,8 @@ bodyElement = do
 ## Function *mergeWith*
 
 Assume, it would be possible to click in the above example both buttons simultaneously. 
-If we click both buttons together, the function *leftmost* returns only *evIncr* and we loose *evDecr*.
-In situations, where we are not allowed to loose events, we can use the function *mergeWith*.
+If we click both buttons together, the function *leftmost* returns only *evIncr* and we lose *evDecr*.
+In situations, where we are not allowed to lose events, we can use the function *mergeWith*.
 
 The function *mergeWith* has the following type:
 
@@ -958,7 +958,7 @@ In the section about checkboxes you will see a function again called *value*. It
 
 ```value :: Checkbox -> Dynamic t Bool``` .
 
-Reflex-dom uses advanced Haskell type level hackery to define this *value* function polymorphicly. For you it's simple:
+Reflex-dom uses advanced Haskell type level hackery to define this *value* function polymorphically. For you it's simple:
 The function *value* normally does what you naturally expect! 
 Most of the predefined input widgets are instances of the type class *HasValue*. Hence most of these widgets
 support the *value* function. All of these *value* functions return *Dynamic* values.
@@ -1027,7 +1027,7 @@ We have to specify a default value, to be used before the first event occurs.
 
 Look at the last two lines in the file *src/textinput03.hs*:
 
-* *evText* is the event that carries the contents of the TextInput as payload
+* *evText* is the event that carries the contents of the TextInput as payload.
 * With the function *holdDyn* we create a Dynamic. Its value changes on each click on the button.
 
 
