@@ -37,6 +37,7 @@ extra-deps:
 - tz-0.1.2.0
 - dlist-0.7.1.2
 - ghcjs-dom-0.2.4.0
+- haskell-src-exts-1.17.1
 - ref-tf-0.4.0.1
 - prim-uniq-0.1.0.1
 - zenc-0.1.1
